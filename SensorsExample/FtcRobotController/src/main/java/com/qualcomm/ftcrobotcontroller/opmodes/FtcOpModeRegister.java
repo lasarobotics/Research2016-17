@@ -48,6 +48,7 @@ public class FtcOpModeRegister implements OpModeRegister {
 
   public void register(OpModeManager manager) {
     manager.register("Shooter", shooterTest.class);
+    manager.register("Servo", contServo.class);
     manager.register("wall", wallAlign.class);
     manager.register("range", range.class);
     manager.register("MecanumRange", mecanumRange.class);

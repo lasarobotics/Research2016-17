@@ -14,23 +14,23 @@ public class shooterTest extends OpMode {
     public void init() {
         left= hardwareMap.dcMotor.get("l");
         right=hardwareMap.dcMotor.get("r");
-        right.setDirection(DcMotor.Direction.REVERSE);
+        left.setDirection(DcMotor.Direction.REVERSE);
     }
 
     @Override
     public void loop() {
         if(gamepad1.a){
-            left.setPower(.9);
-            right.setPower(.9);
+            left.setPower(1);
+            right.setPower(.95);
         } else if(gamepad1.b) {
-            left.setPower(.8);
-            right.setPower(.8);
+            left.setPower(1);
+            right.setPower(1);
         } else if(gamepad1.y) {
-            left.setPower(.7);
-            right.setPower(.7);
+            left.setPower(.95);
+            right.setPower(1);
         }else if(gamepad1.x){
-            left.setPower(.6);
-            right.setPower(.6);
+            left.setPower(.9);
+            right.setPower(1);
         } else {
             left.setPower(0);
             right.setPower(0);
