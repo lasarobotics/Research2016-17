@@ -21,12 +21,11 @@ public class MecanumTele extends OpMode {
         right2 = hardwareMap.dcMotor.get("r2");
         left1.setDirection(DcMotor.Direction.REVERSE);
         left2.setDirection(DcMotor.Direction.REVERSE);
-
     }
 
     @Override
     public void loop() {
-        arcade(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, left1, right1, left2, right2);
+        arcade(-gamepad1.left_stick_y, gamepad1.left_stick_x, -gamepad1.right_stick_x, left1, right1, left2, right2);
     }
 
     //Mecanum:
