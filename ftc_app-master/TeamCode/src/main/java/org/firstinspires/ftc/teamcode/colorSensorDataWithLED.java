@@ -9,8 +9,8 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 /**
  * Created by Ethan Schaffer on 10/6/2016.
  */
-@Autonomous(name="ColorSensorNoLED", group="Autonomous")
-public class colorSensorData extends LinearOpMode{
+@Autonomous(name="ColorSensorLED", group="Autonomous")
+public class colorSensorDataWithLED extends LinearOpMode{
 
 
     @Override
@@ -23,7 +23,7 @@ public class colorSensorData extends LinearOpMode{
         final float values[] = hsvValues;
 
         waitForStart();
-        color.enableLed(false);
+        color.enableLed(true);
         while(opModeIsActive()){
             Color.RGBToHSV(color.red() * 8, color.green() * 8, color.blue() * 8, hsvValues);
             telemetry.addData("color.red()", color.red());

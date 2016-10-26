@@ -41,13 +41,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.I2cDevice;
 
+import org.firstinspires.ftc.robotcontroller.internal.testcode.MatrixControllerDemo;
 import org.firstinspires.ftc.robotcontroller.internal.testcode.TestColorSensors;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.navX.ftc.AHRS;
 
 import java.util.Arrays;
 
-@Autonomous(name="V_1", group="Autonomous")
+@Autonomous(name="Strafes Left", group="Autonomous")
 public class AutoRangeTestBot extends LinearOpMode {
 
     //Runs op mode
@@ -56,9 +60,10 @@ public class AutoRangeTestBot extends LinearOpMode {
 
         // get a reference to our compass
         DcMotor left1, right1, left2, right2;
+        ModernRoboticsI2cGyro gyroSensor;
+        gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, "g");
+        ColorSensor color = hardwareMap.colorSensor.get("c");
         ModernRoboticsI2cRangeSensor rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "r");
-        ModernRoboticsI2cGyro gyro = hardwareMap.get(ModernRoboticsI2cGyro.class, "g");
-//        ColorSensor color = hardwareMap.get(ColorSensor.class, "c");
         left1 = hardwareMap.dcMotor.get("l1"); // AL00XR4D.1
         left2 = hardwareMap.dcMotor.get("l2"); // AL00UYRR.1
         right1 = hardwareMap.dcMotor.get("r1");// AL00XR4D.2
@@ -70,20 +75,24 @@ public class AutoRangeTestBot extends LinearOpMode {
         telemetry.update();
 
         // wait for the start button to be pressed
+        double startingG = gyroSensor.getHeading();
+        int encPos = left1.getCurrentPosition();
+
+        //WAIT FOR START IS HERE
         waitForStart();
 
-        int encPos;
-        encPos = left1.getCurrentPosition();
+        resetEncs(left1, right1, left2, right2);
         telemetry.addData("Left", encPos);
         telemetry.update();
-        drive(.75, left1, right1, left2, right2);
-        while((left1.getCurrentPosition()-encPos) < 3500) {
+        drive(-.65, left1, right1, left2, right2);
+        while(Math.abs((left1.getCurrentPosition()-encPos)) < 3000) {
             telemetry.addData("Left", left1.getCurrentPosition() - encPos);
             telemetry.update();
         }
         drive(0, left1, right1, left2, right2);
         while(rangeSensor.getDistance(DistanceUnit.CM) > 12){
-            double  val = 1;
+            //strafes LEFT
+            double  val = .7;
             left1.setPower(val);
             left2.setPower(-val);
             right1.setPower(-val);
@@ -92,16 +101,31 @@ public class AutoRangeTestBot extends LinearOpMode {
             telemetry.update();
         }
         drive(0, left1, right1, left2, right2);
-
-        telemetry.addData("g", gyro.getHeading());
         telemetry.update();
-
-
         encPos = left1.getCurrentPosition();
-        drive(.75, left1, right1, left2, right2);
-        while((left1.getCurrentPosition()-encPos) < 1000) {
+        drive(.3, left1, right1, left2, right2);
+        while(Math.abs((left1.getCurrentPosition()-encPos)) < 300) {
             telemetry.addData("Left", left1.getCurrentPosition() - encPos);
             telemetry.update();
+        }
+
+        while(Math.abs(gyroSensor.getHeading()-startingG) > 5){
+            double val = .2;
+            left1.setPower(val);
+            left2.setPower(-val);
+            right1.setPower(-val);
+            right2.setPower(val);
+        }
+        drive(0, left1, right1, left2, right2);
+
+        while( ((color.red()+color.blue()+color.green())/3) < 2){
+            drive(-.2, left1, right1, left2, right2);
+        }
+        drive(0, left1, right1, left2, right2);
+        sleep(1000);
+        drive(-.2, left1, right1, left2, right2);
+        sleep(500);
+        while( ((color.red()+color.blue()+color.green())/3) < 2) {
         }
         drive(0, left1, right1, left2, right2);
     }
