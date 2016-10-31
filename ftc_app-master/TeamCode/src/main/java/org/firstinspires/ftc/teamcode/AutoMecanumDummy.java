@@ -52,7 +52,7 @@ import org.firstinspires.ftc.teamcode.navX.ftc.AHRS;
 import java.util.Arrays;
 
 @Autonomous(name="Strafes Left", group="Autonomous")
-public class AutoRangeTestBot extends LinearOpMode {
+public class AutoMecanumDummy extends LinearOpMode {
 
     //Runs op mode
     @Override
@@ -76,6 +76,10 @@ public class AutoRangeTestBot extends LinearOpMode {
 
         // wait for the start button to be pressed
         double startingG = gyroSensor.getHeading();
+
+        left1.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        while(left1.getCurrentPosition()!=0){
+        }//wait
         int encPos = left1.getCurrentPosition();
 
         //WAIT FOR START IS HERE
