@@ -32,38 +32,33 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.teamcode;
 
-import android.graphics.Color;
-
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
-import com.qualcomm.robotcore.hardware.I2cDevice;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcontroller.internal.testcode.MatrixControllerDemo;
-import org.firstinspires.ftc.robotcontroller.internal.testcode.TestColorSensors;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.navX.ftc.AHRS;
 
 import java.util.Arrays;
 
-@Disabled
-@Autonomous(name="Strafes Left", group="Autonomous")
-public class AutoMecanumDummy extends LinearOpMode {
+@Autonomous(name="Final Auto (L)", group="Autonomous")
+public class AutoMecanumFinal extends LinearOpMode {
+    public static final double BLOCKSERVOOPENVALUE = 1;
+    public static final double BLOCKSERVOCLOSEDVALUE = 0;
 
     //Runs op mode
     @Override
     public void runOpMode() throws InterruptedException {
 
         // get a reference to our compass
-        DcMotor left1, right1, left2, right2;
+        DcMotor left1, right1, left2, right2, shooter1, shooter2;
         ModernRoboticsI2cGyro gyroSensor;
         gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, "g");
-        ColorSensor color = hardwareMap.colorSensor.get("c");
+        ColorSensor color1 = hardwareMap.colorSensor.get("c1");
+        ColorSensor color2 = hardwareMap.colorSensor.get("c2");
         ModernRoboticsI2cRangeSensor rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "r");
         left1 = hardwareMap.dcMotor.get("l1"); // AL00XR4D.1
         left2 = hardwareMap.dcMotor.get("l2"); // AL00UYRR.1
@@ -71,7 +66,10 @@ public class AutoMecanumDummy extends LinearOpMode {
         right2 = hardwareMap.dcMotor.get("r2"); // AL00UYRR.2
         left1.setDirection(DcMotor.Direction.REVERSE);
         left2.setDirection(DcMotor.Direction.REVERSE);
-
+        shooter1 = hardwareMap.dcMotor.get("s1");
+        shooter2 = hardwareMap.dcMotor.get("s2");
+        Servo stopper, leftP, rightP;
+        stopper = hardwareMap.servo.get("s");
         telemetry.addData("raw ultrasonic", rangeSensor.rawUltrasonic());
         telemetry.update();
 
@@ -90,11 +88,24 @@ public class AutoMecanumDummy extends LinearOpMode {
         telemetry.addData("Left", encPos);
         telemetry.update();
         drive(-.65, left1, right1, left2, right2);
+        while(Math.abs((left1.getCurrentPosition()-encPos)) < 1000) {
+            telemetry.addData("Left", left1.getCurrentPosition() - encPos);
+            telemetry.update();
+        }
+        drive(0, left1, right1, left2, right2);
+        stopper.setPosition(BLOCKSERVOOPENVALUE); //Make sure to update
+        shooter1.setPower(1);
+        shooter2.setPower(1);
+        sleep(1000);
+        shooter1.setPower(0);
+        shooter2.setPower(0);
+        stopper.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
         while(Math.abs((left1.getCurrentPosition()-encPos)) < 3000) {
             telemetry.addData("Left", left1.getCurrentPosition() - encPos);
             telemetry.update();
         }
         drive(0, left1, right1, left2, right2);
+
         while(rangeSensor.getDistance(DistanceUnit.CM) > 12){
             //strafes LEFT
             double  val = .7;
@@ -123,16 +134,20 @@ public class AutoMecanumDummy extends LinearOpMode {
         }
         drive(0, left1, right1, left2, right2);
 
-        while( ((color.red()+color.blue()+color.green())/3) < 2){
+        while( ((color1.red()+color1.blue()+color1.green())/3) < 2){
             drive(-.2, left1, right1, left2, right2);
         }
         drive(0, left1, right1, left2, right2);
+
+        //AT FIRST BEACON
+
         sleep(1000);
         drive(-.2, left1, right1, left2, right2);
         sleep(500);
-        while( ((color.red()+color.blue()+color.green())/3) < 2) {
+        while( ((color1.red()+color1.blue()+color1.green())/3) < 2) {
         }
         drive(0, left1, right1, left2, right2);
+        //AT SECOND BEACON
     }
 
     //Constant Power
