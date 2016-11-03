@@ -1,5 +1,8 @@
+/*
+ADB guide can be found at:
+https://ftcprogramming.wordpress.com/2015/11/30/building-ftc_app-wirelessly/
+*/
 package org.firstinspires.ftc.teamcode;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -7,7 +10,6 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.Range;
 
 import java.util.Arrays;
 
@@ -60,31 +62,31 @@ public class TeleOpFinal extends OpMode {
     public static final String COLORBOTTOMNAME = "cb";
 
 
-    DcMotor left1, left2, right1, right2, shoot1, shoot2, infeed;
-    Servo leftPush, rightPush, ballBlock;
-    ColorSensor colorSide, colorBottom;
+    DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
+    Servo leftButtonPusher, rightButtonPusher, ballBlock;
+    ColorSensor colorSensorOnSide, colorSensorOnBottom;
     ModernRoboticsI2cRangeSensor range;
     @Override
     public void init() {
-        left1 =hardwareMap.dcMotor.get(LEFT1NAME);
-        left2 =hardwareMap.dcMotor.get(LEFT2NAME);
-        right1=hardwareMap.dcMotor.get(RIGHT1NAME);
-        right2=hardwareMap.dcMotor.get(RIGHT2NAME);
-        right1.setDirection(DcMotorSimple.Direction.REVERSE);
-        right2.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFrontWheel =hardwareMap.dcMotor.get(LEFT1NAME);
+        leftBackWheel =hardwareMap.dcMotor.get(LEFT2NAME);
+        rightFrontWheel =hardwareMap.dcMotor.get(RIGHT1NAME);
+        rightBackWheel =hardwareMap.dcMotor.get(RIGHT2NAME);
+        rightFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot1=hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot2=hardwareMap.dcMotor.get(SHOOT2NAME);
         infeed=hardwareMap.dcMotor.get(INFEEDNAME);
         infeed.setDirection(DcMotorSimple.Direction.REVERSE);
         ballBlock=hardwareMap.servo.get(BALLBLOCKNAME);
-        leftPush =hardwareMap.servo.get(LEFTPUSHNAME);
-        rightPush=hardwareMap.servo.get(RIGHTPUSHNAME);
-        leftPush.setPosition(LEFTSERVOMAXVALUE);
-        rightPush.setPosition(RIGHTSERVOMINVALUE);
+        leftButtonPusher =hardwareMap.servo.get(LEFTPUSHNAME);
+        rightButtonPusher =hardwareMap.servo.get(RIGHTPUSHNAME);
+        leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
+        rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
-        colorSide = hardwareMap.colorSensor.get(COLORSIDENAME);
-        colorBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
+        colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
+        colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
     }
 
     @Override
@@ -140,7 +142,7 @@ public class TeleOpFinal extends OpMode {
                 inputC /= SLOWDOWNVALUE*BIGGERTRIGGER;
         }
         //Use the larger trigger value to scale down the inputs.
-        arcadeMecanum(inputX, inputY, inputC, left1, right1, left2, right2);
+        arcadeMecanum(inputX, inputY, inputC, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
 /*
   ___  ___ _ ____   _____
@@ -149,8 +151,8 @@ public class TeleOpFinal extends OpMode {
  |___/\___|_|    \_/ \___/
  */
 
-        setServo(leftPush, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
-        setServo(rightPush, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
+        setServo(leftButtonPusher, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
+        setServo(rightButtonPusher, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
 
 /*
       _                 _
@@ -177,8 +179,8 @@ public class TeleOpFinal extends OpMode {
                                           __/ |
                                          |___/
 */
-        telemetry.addData("leftServo", leftPush.getPosition());
-        telemetry.addData("rightServo", rightPush.getPosition());
+        telemetry.addData("leftServo", leftButtonPusher.getPosition());
+        telemetry.addData("rightServo", rightButtonPusher.getPosition());
         telemetry.addData("Controller LeftY", gamepad1.left_stick_y);
         telemetry.addData("Controller LeftX", gamepad1.left_stick_x);
         telemetry.addData("Controller RightY", gamepad1.right_stick_y);
