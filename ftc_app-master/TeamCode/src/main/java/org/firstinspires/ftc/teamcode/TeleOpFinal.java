@@ -1,9 +1,14 @@
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
+
 import java.util.Arrays;
 
 /**
@@ -13,8 +18,8 @@ import java.util.Arrays;
 public class TeleOpFinal extends OpMode {
 
     //TWEAKING VALUES
-    public static final double BLOCKSERVOOPENVALUE = 1;
-    public static final double BLOCKSERVOCLOSEDVALUE = 0;
+    public static final double BLOCKSERVOOPENVALUE = 0;
+    public static final double BLOCKSERVOCLOSEDVALUE = 1;
     public static final double MAXINFEEDPOWER = 1;
     public static final double MAXOUTFEEDPOWER = -1;
     public static final double INFEEDOFFPOWER = 0;
@@ -29,6 +34,8 @@ public class TeleOpFinal extends OpMode {
         IN, OUT, NOTGOING
     }
     public GOING INFEEDSTATUS = GOING.NOTGOING;
+    public boolean RECENTLEFTBUMPERVALUE = false;
+    public boolean RECENTRIGHTBUMPERVALUE = false;
     public static final double SLOWDOWNVALUE = 5;
     public static final double TRIGGERTHRESHOLD = .2;
     public static final double ACCEPTINPUTTHRESHOLD = .15;
@@ -48,10 +55,15 @@ public class TeleOpFinal extends OpMode {
     public static final String BALLBLOCKNAME = "b";
     public static final String LEFTPUSHNAME = "lp";
     public static final String RIGHTPUSHNAME = "rp";
+    public static final String RANGENAME = "r";
+    public static final String COLORSIDENAME = "cs";
+    public static final String COLORBOTTOMNAME = "cb";
 
 
     DcMotor left1, left2, right1, right2, shoot1, shoot2, infeed;
     Servo leftPush, rightPush, ballBlock;
+    ColorSensor colorSide, colorBottom;
+    ModernRoboticsI2cRangeSensor range;
     @Override
     public void init() {
         left1 =hardwareMap.dcMotor.get(LEFT1NAME);
@@ -69,7 +81,10 @@ public class TeleOpFinal extends OpMode {
         leftPush =hardwareMap.servo.get(LEFTPUSHNAME);
         rightPush=hardwareMap.servo.get(RIGHTPUSHNAME);
         leftPush.setPosition(LEFTSERVOMAXVALUE);
-        rightPush.setPosition(RIGHTSERVOMAXVALUE);
+        rightPush.setPosition(RIGHTSERVOMINVALUE);
+        range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
+        colorSide = hardwareMap.colorSensor.get(COLORSIDENAME);
+        colorBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
     }
 
     @Override
@@ -83,12 +98,12 @@ public class TeleOpFinal extends OpMode {
  | | | | | ||  __/  __/ (_| |
  |_|_| |_|_| \___|\___|\__,_|
 */
-        if(gamepad2.left_bumper){
+        if(RECENTLEFTBUMPERVALUE && !gamepad2.left_bumper){
             INFEEDSTATUS =(INFEEDSTATUS == GOING.IN) ? GOING.NOTGOING : GOING.IN;
-        } else if (gamepad2.right_bumper){
+        } else if (RECENTRIGHTBUMPERVALUE && !gamepad2.right_bumper){
             INFEEDSTATUS =(INFEEDSTATUS == GOING.OUT) ? GOING.NOTGOING : GOING.OUT;
         }
-        //Ternary Operations used to control the state
+        //Ternary Operations used to toggle INFEEDSTATUS
         switch(INFEEDSTATUS){
             case IN:
                 infeed.setPower(MAXINFEEDPOWER);
@@ -101,6 +116,8 @@ public class TeleOpFinal extends OpMode {
             default:
                 infeed.setPower(INFEEDOFFPOWER);
         }
+        RECENTLEFTBUMPERVALUE = gamepad2.left_bumper;
+        RECENTRIGHTBUMPERVALUE = gamepad2.right_bumper;
 
 /*
       _      _
@@ -132,8 +149,8 @@ public class TeleOpFinal extends OpMode {
  |___/\___|_|    \_/ \___/
  */
 
-        setServo(leftPush, gamepad2.a, gamepad2.b, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
-        setServo(rightPush, gamepad2.x, gamepad2.y, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
+        setServo(leftPush, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
+        setServo(rightPush, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
 
 /*
       _                 _

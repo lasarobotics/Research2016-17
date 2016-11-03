@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -46,35 +47,82 @@ import java.util.Arrays;
 
 @Autonomous(name="Final Auto (L)", group="Autonomous")
 public class AutoMecanumFinal extends LinearOpMode {
-    public static final double BLOCKSERVOOPENVALUE = 1;
-    public static final double BLOCKSERVOCLOSEDVALUE = 0;
+    //TWEAKING VALUES
+    public static final double BLOCKSERVOOPENVALUE = 0;
+    public static final double BLOCKSERVOCLOSEDVALUE = 1;
+    public static final double MAXINFEEDPOWER = 1;
+    public static final double MAXOUTFEEDPOWER = -1;
+    public static final double INFEEDOFFPOWER = 0;
+    public static final double SERVOINCREMENTVALUE = .02;
+    public static final double LEFTSERVOMAXVALUE = 1;
+    public static final double LEFTSERVOMINVALUE = 0;
+    public static final double RIGHTSERVOMAXVALUE = 1;
+    public static final double RIGHTSERVOMINVALUE = 0;
+
+    //GOOD VALUES
+    public enum GOING {
+        IN, OUT, NOTGOING
+    }
+    public TeleOpFinal.GOING INFEEDSTATUS = TeleOpFinal.GOING.NOTGOING;
+    public boolean RECENTLEFTBUMPERVALUE = false;
+    public boolean RECENTRIGHTBUMPERVALUE = false;
+    public static final double SLOWDOWNVALUE = 5;
+    public static final double TRIGGERTHRESHOLD = .2;
+    public static final double ACCEPTINPUTTHRESHOLD = .15;
+    public static final double SHOOTERMAXVALUE = 1;
+    public static final double SHOOTERMINVALUE = 0;
+    public static final double SHOOTERTHRESHOLD = .2;
+    public static final double SHOOTERLOWERRATE = 0;
+    //I know these should be switched, but the hardware map is a pain to fix.
+    public static final String LEFT1NAME = "l2";
+    public static final String LEFT2NAME = "l1";
+    //I know these should be switched, but the hardware map is a pain to fix.
+    public static final String RIGHT1NAME = "r1";
+    public static final String RIGHT2NAME = "r2";
+    public static final String SHOOT1NAME = "sh1";
+    public static final String SHOOT2NAME = "sh2";
+    public static final String INFEEDNAME = "in";
+    public static final String BALLBLOCKNAME = "b";
+    public static final String LEFTPUSHNAME = "lp";
+    public static final String RIGHTPUSHNAME = "rp";
+    public static final String RANGENAME = "r";
+    public static final String COLORSIDENAME = "cs";
+    public static final String COLORBOTTOMNAME = "cb";
+
+
+    DcMotor left1, left2, right1, right2, shoot1, shoot2, infeed;
+    Servo leftPush, rightPush, ballBlock;
+    ColorSensor color1, color2;
+    ModernRoboticsI2cRangeSensor range;
 
     //Runs op mode
     @Override
     public void runOpMode() throws InterruptedException {
 
-        // get a reference to our compass
-        DcMotor left1, right1, left2, right2, shooter1, shooter2;
-        ModernRoboticsI2cGyro gyroSensor;
-        gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, "g");
-        ColorSensor color1 = hardwareMap.colorSensor.get("c1");
-        ColorSensor color2 = hardwareMap.colorSensor.get("c2");
-        ModernRoboticsI2cRangeSensor rangeSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "r");
-        left1 = hardwareMap.dcMotor.get("l1"); // AL00XR4D.1
-        left2 = hardwareMap.dcMotor.get("l2"); // AL00UYRR.1
-        right1 = hardwareMap.dcMotor.get("r1");// AL00XR4D.2
-        right2 = hardwareMap.dcMotor.get("r2"); // AL00UYRR.2
-        left1.setDirection(DcMotor.Direction.REVERSE);
-        left2.setDirection(DcMotor.Direction.REVERSE);
-        shooter1 = hardwareMap.dcMotor.get("s1");
-        shooter2 = hardwareMap.dcMotor.get("s2");
-        Servo stopper, leftP, rightP;
-        stopper = hardwareMap.servo.get("s");
-        telemetry.addData("raw ultrasonic", rangeSensor.rawUltrasonic());
+        left1 =hardwareMap.dcMotor.get(LEFT1NAME);
+        left2 =hardwareMap.dcMotor.get(LEFT2NAME);
+        right1=hardwareMap.dcMotor.get(RIGHT1NAME);
+        right2=hardwareMap.dcMotor.get(RIGHT2NAME);
+        left1.setDirection(DcMotorSimple.Direction.REVERSE);
+        left2.setDirection(DcMotorSimple.Direction.REVERSE);
+        shoot1=hardwareMap.dcMotor.get(SHOOT1NAME);
+        shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shoot2=hardwareMap.dcMotor.get(SHOOT2NAME);
+        infeed=hardwareMap.dcMotor.get(INFEEDNAME);
+        infeed.setDirection(DcMotorSimple.Direction.REVERSE);
+        ballBlock=hardwareMap.servo.get(BALLBLOCKNAME);
+        leftPush =hardwareMap.servo.get(LEFTPUSHNAME);
+        rightPush=hardwareMap.servo.get(RIGHTPUSHNAME);
+        leftPush.setPosition(LEFTSERVOMAXVALUE);
+        rightPush.setPosition(RIGHTSERVOMINVALUE);
+        range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
+        color1 = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
+        color2 = hardwareMap.colorSensor.get(COLORSIDENAME);
+        telemetry.addData("raw ultrasonic", range.rawUltrasonic());
         telemetry.update();
 
         // wait for the start button to be pressed
-        double startingG = gyroSensor.getHeading();
+//        double startingG = gyroSensor.getHeading();
 
         left1.setMode(DcMotor.RunMode.RESET_ENCODERS);
         while(left1.getCurrentPosition()!=0){
@@ -87,33 +135,34 @@ public class AutoMecanumFinal extends LinearOpMode {
         resetEncs(left1, right1, left2, right2);
         telemetry.addData("Left", encPos);
         telemetry.update();
-        drive(-.65, left1, right1, left2, right2);
+        drive(-.85, left1, right1, left2, right2);
         while(Math.abs((left1.getCurrentPosition()-encPos)) < 1000) {
             telemetry.addData("Left", left1.getCurrentPosition() - encPos);
             telemetry.update();
         }
         drive(0, left1, right1, left2, right2);
-        stopper.setPosition(BLOCKSERVOOPENVALUE); //Make sure to update
-        shooter1.setPower(1);
-        shooter2.setPower(1);
+        ballBlock.setPosition(BLOCKSERVOOPENVALUE); //Make sure to update
+        shoot1.setPower(1);
+        shoot2.setPower(1);
         sleep(1000);
-        shooter1.setPower(0);
-        shooter2.setPower(0);
-        stopper.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
-        while(Math.abs((left1.getCurrentPosition()-encPos)) < 3000) {
+        shoot1.setPower(0);
+        shoot2.setPower(0);
+        ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
+        drive(-.85, left1, right1, left2, right2);
+        while(Math.abs((left1.getCurrentPosition()-encPos)) < 1500) {
             telemetry.addData("Left", left1.getCurrentPosition() - encPos);
             telemetry.update();
         }
         drive(0, left1, right1, left2, right2);
 
-        while(rangeSensor.getDistance(DistanceUnit.CM) > 12){
+        while(range.getDistance(DistanceUnit.CM) > 12){
             //strafes LEFT
-            double  val = .7;
+            double  val = .5;
             left1.setPower(val);
             left2.setPower(-val);
             right1.setPower(-val);
             right2.setPower(val);
-            telemetry.addData("raw ultrasonic", rangeSensor.getDistance(DistanceUnit.CM));
+            telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
             telemetry.update();
         }
         drive(0, left1, right1, left2, right2);
@@ -124,7 +173,21 @@ public class AutoMecanumFinal extends LinearOpMode {
             telemetry.addData("Left", left1.getCurrentPosition() - encPos);
             telemetry.update();
         }
+        drive(0, left1, right1, left2, right2);
+        encPos = left1.getCurrentPosition();
+        while(Math.abs((left1.getCurrentPosition()-encPos)) < 150){
+            //strafes LEFT
+            double  val = -.2;
+            left1.setPower(val);
+            left2.setPower(-val);
+            right1.setPower(-val);
+            right2.setPower(val);
+            telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
+            telemetry.update();
+        }
+        drive(0, left1, right1, left2, right2);
 
+/*
         while(Math.abs(gyroSensor.getHeading()-startingG) > 5){
             double val = .2;
             left1.setPower(val);
@@ -133,21 +196,34 @@ public class AutoMecanumFinal extends LinearOpMode {
             right2.setPower(val);
         }
         drive(0, left1, right1, left2, right2);
-
+*/
         while( ((color1.red()+color1.blue()+color1.green())/3) < 2){
             drive(-.2, left1, right1, left2, right2);
         }
         drive(0, left1, right1, left2, right2);
 
         //AT FIRST BEACON
-
+        if(color2.red() > 5){
+            rightPush.setPosition(.5);
+        } else {
+            leftPush.setPosition(.5);
+        }
         sleep(1000);
+
         drive(-.2, left1, right1, left2, right2);
         sleep(500);
+        leftPush.setPosition(0);
+        rightPush.setPosition(0);
         while( ((color1.red()+color1.blue()+color1.green())/3) < 2) {
         }
         drive(0, left1, right1, left2, right2);
         //AT SECOND BEACON
+        if(color2.red() > 5){
+            rightPush.setPosition(.5);
+        } else {
+            leftPush.setPosition(.5);
+        }
+
     }
 
     //Constant Power
