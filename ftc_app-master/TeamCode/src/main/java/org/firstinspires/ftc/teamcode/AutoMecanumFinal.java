@@ -28,21 +28,19 @@ public class AutoMecanumFinal extends LinearOpMode {
     public static final double MAXINFEEDPOWER = 1;
 
     //GOOD VALUES
-    //I know these should be switched, but the hardware map is a pain to fix.
-    public static final String LEFT1NAME = "l2";
-    public static final String LEFT2NAME = "l1";
-    //I know these should be switched, but the hardware map is a pain to fix.
-    public static final String RIGHT1NAME = "r1";
-    public static final String RIGHT2NAME = "r2";
-    public static final String SHOOT1NAME = "sh1";
-    public static final String SHOOT2NAME = "sh2";
-    public static final String INFEEDNAME = "in";
-    public static final String BALLBLOCKNAME = "b";
-    public static final String LEFTPUSHNAME = "lp";
-    public static final String RIGHTPUSHNAME = "rp";
-    public static final String RANGENAME = "r";
-    public static final String COLORSIDENAME = "cs";
-    public static final String COLORBOTTOMNAME = "cb";
+    public static final String LEFT1NAME = "l1"; //LX Port 2
+    public static final String LEFT2NAME = "l2"; //LX Port 1
+    public static final String RIGHT1NAME = "r1";//0A Port 1
+    public static final String RIGHT2NAME = "r2";//0A Port 2
+    public static final String SHOOT1NAME = "sh1";//PN Port 1
+    public static final String SHOOT2NAME = "sh2";//PN Port 2
+    public static final String INFEEDNAME = "in"; //2S Port 2
+    public static final String BALLBLOCKNAME = "b";//MO Port 3
+    public static final String LEFTPUSHNAME = "lp";//MO Port 1
+    public static final String RIGHTPUSHNAME = "rp";//MO Port 2
+    public static final String RANGENAME = "r"; //Port 0
+    public static final String COLORSIDENAME = "cs"; //Port 1
+    public static final String COLORBOTTOMNAME = "cb";//Port 2
 
     DcMotor leftFrontWheel, leftbBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;

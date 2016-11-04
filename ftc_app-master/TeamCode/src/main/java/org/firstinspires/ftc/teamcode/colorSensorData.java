@@ -2,38 +2,41 @@ package org.firstinspires.ftc.teamcode;
 
 import android.graphics.Color;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
+import com.qualcomm.robotcore.hardware.I2cDevice;
 
 /**
  * Created by Ethan Schaffer on 10/6/2016.
  */
-@Autonomous(name="ColorSensorNoLED", group="Autonomous")
+@Autonomous(name="ColorSensorFinal", group="Autonomous")
 public class colorSensorData extends LinearOpMode{
 
-
+    ColorSensor color1, color2;
     @Override
     public void runOpMode() throws InterruptedException {
-        ColorSensor color = hardwareMap.get(ColorSensor.class, "c");
-        // hsvValues is an array that will hold the hue, saturation, and value information.
-        float hsvValues[] = {0F,0F,0F};
-
-        // values is a reference to the hsvValues array.
-        final float values[] = hsvValues;
+        color1 = hardwareMap.colorSensor.get("cb");
+//        color1.setI2cAddress(I2cAddr.create8bit(0x4c));
+        color2 = hardwareMap.colorSensor.get("cs");
+        color2.setI2cAddress(I2cAddr.create8bit(0x3c));
+        color1.enableLed(true);
+        color2.enableLed(false);
 
         waitForStart();
-        color.enableLed(false);
         while(opModeIsActive()){
-            Color.RGBToHSV(color.red() * 8, color.green() * 8, color.blue() * 8, hsvValues);
-            telemetry.addData("color.red()", color.red());
-            telemetry.addData("color.arbg()", color.argb());
-            telemetry.addData("color.green()", color.green());
-            telemetry.addData("color.blue()", color.blue());
-            telemetry.addData("color.alpha()", color.alpha());
-            telemetry.addData("HSV[0]", hsvValues[0]);
-            telemetry.addData("HSV[1]", hsvValues[1]);
-            telemetry.addData("HSV[2]", hsvValues[2]);
+            color2.setI2cAddress(I2cAddr.create8bit(0x3c));
+            color1.enableLed(true);
+            color2.enableLed(false);
+            telemetry.addData("color1.red()", color1.red());
+            telemetry.addData("color1.green()", color1.green());
+            telemetry.addData("color1.blue()", color1.blue());
+            telemetry.addData("-----", "------");
+            telemetry.addData("color2.red()", color2.red());
+            telemetry.addData("color2.green()", color2.green());
+            telemetry.addData("color2.blue()", color2.blue());
 
             telemetry.update();
             idle();
