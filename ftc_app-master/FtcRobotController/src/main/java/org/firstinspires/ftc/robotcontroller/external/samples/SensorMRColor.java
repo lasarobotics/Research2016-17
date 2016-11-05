@@ -56,7 +56,7 @@ import com.qualcomm.robotcore.hardware.I2cDevice;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 @TeleOp(name = "Sensor: MR Color", group = "Autonomous")
-//@Disabled
+@Disabled
 public class SensorMRColor extends LinearOpMode {
 
   ColorSensor colorSensor;    // Hardware Device Object
@@ -73,7 +73,7 @@ public class SensorMRColor extends LinearOpMode {
 
     // get a reference to the RelativeLayout so we can change the background
     // color of the Robot Controller app to match the hue detected by the RGB sensor.
-    final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(R.id.RelativeLayout);
+//    final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(R.id.RelativeLayout);
 
     // bPrevState and bCurrState represent the previous and current state of the button.
     boolean bPrevState = false;
@@ -83,7 +83,7 @@ public class SensorMRColor extends LinearOpMode {
     boolean bLedOn = true;
 
     // get a reference to our ColorSensor object.
-    colorSensor = hardwareMap.colorSensor.get("cb");
+    colorSensor = hardwareMap.colorSensor.get("cs");
 
     // Set the LED in the beginning
     colorSensor.enableLed(bLedOn);
@@ -123,12 +123,13 @@ public class SensorMRColor extends LinearOpMode {
       // change the background color to match the color detected by the RGB sensor.
       // pass a reference to the hue, saturation, and value array as an argument
       // to the HSVToColor method.
+/*
       relativeLayout.post(new Runnable() {
         public void run() {
           relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
         }
       });
-
+*/
       telemetry.update();
       idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
     }

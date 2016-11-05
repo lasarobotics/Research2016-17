@@ -10,14 +10,15 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Arrays;
 
-@Autonomous(name="Red Alliance", group="Autonomous")
-public class AutoMecanumFinal extends LinearOpMode {
+@Autonomous(name="Color Sensing Line", group="Autonomous")
+public class TestColorSensingLine extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
@@ -69,87 +70,43 @@ public class AutoMecanumFinal extends LinearOpMode {
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
         colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
+        colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
-        telemetry.addData("raw ultrasonic", range.rawUltrasonic());
-        telemetry.update();
-
+        colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
+        colorSensorOnBottom.enableLed(true);
+        colorSensorOnSide.enableLed(false);
+/*
         leftFrontWheel.setMode(DcMotor.RunMode.RESET_ENCODERS);
         while(leftFrontWheel.getCurrentPosition()!=0){
         }//wait
         int leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-
+*/
         //WAIT FOR START IS HERE
         waitForStart();
 
-        resetEncs(leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        telemetry.addData("Left", leftFrontWheelEncoderPosition);
-        telemetry.update();
-        drive(-.85, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 1000) {
-            telemetry.addData("Left Encoder", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
-            telemetry.update();
-        }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        ballBlock.setPosition(BLOCKSERVOOPENVALUE); //Make sure to update
-        shoot1.setPower(1); shoot2.setPower(1);
-        infeed.setPower(MAXINFEEDPOWER);
-        sleep(1000);
-        shoot1.setPower(0); shoot2.setPower(0);
-        ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
-        infeed.setPower(0);
-        drive(-.85, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 1500) {
-            telemetry.addData("Left Encoder", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
-            telemetry.update();
-        }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-
-        while(range.getDistance(DistanceUnit.CM) > 12){
-            //strafes LEFT
-            double  val = .5;
-            leftFrontWheel.setPower(val);
-            leftbBackWheel.setPower(-val);
-            rightFrontWheel.setPower(-val);
-            rightBackWheel.setPower(val);
-            telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
-            telemetry.update();
-        }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        telemetry.update();
-        leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-        drive(.3, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 300) {
-            telemetry.addData("Left", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
-            telemetry.update();
-        }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 150){
-            //strafes LEFT
-            double  val = -.2;
-            leftFrontWheel.setPower(val);
-            leftbBackWheel.setPower(-val);
-            rightFrontWheel.setPower(-val);
-            rightBackWheel.setPower(val);
-            telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
-            telemetry.update();
-        }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-
         drive(-.2, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4){
+            telemetry.addData("A", colorSensorOnBottom.alpha() < 4);
+            telemetry.update();
+        }
+        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(.1, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        while( colorSensorOnBottom.alpha() < 4){
+            telemetry.addData("A", colorSensorOnBottom.alpha() < 4);
+            telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
 
         //AT FIRST BEACON
         telemetry.addData("Red Value, First Beacon", colorSensorOnSide.red());
-        if(colorSensorOnSide.red() > 3){
+        telemetry.update();
+        if(colorSensorOnSide.red() > colorSensorOnSide.blue()){
             rightButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         } else {
             leftButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         }
         sleep(1000);
-
+/*
         drive(-.2, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
         sleep(500);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
@@ -159,6 +116,7 @@ public class AutoMecanumFinal extends LinearOpMode {
         drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
         //AT SECOND BEACON
         telemetry.addData("Red Value, Second Beacon", colorSensorOnSide.red());
+        telemetry.update();
         if(colorSensorOnSide.red() > 3){
             rightButtonPusher.setPosition(RIGHTSERVOMAXVALUE);
         } else {
@@ -167,7 +125,7 @@ public class AutoMecanumFinal extends LinearOpMode {
         sleep(500);
         leftButtonPusher.setPosition(LEFTSERVOMINVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
-
+*/
 
     }
 

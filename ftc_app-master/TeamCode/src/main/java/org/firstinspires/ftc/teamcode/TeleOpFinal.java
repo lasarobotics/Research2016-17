@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Arrays;
@@ -21,16 +22,16 @@ public class TeleOpFinal extends OpMode {
 
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
-
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
+    public static final double LEFTSERVOMAXVALUE = 1;
+    public static final double LEFTSERVOMINVALUE = .08;
+    public static final double RIGHTSERVOMAXVALUE = .94;
+    public static final double RIGHTSERVOMINVALUE = 0;
+
+    public static final double SERVOINCREMENTVALUE = .02;
     public static final double MAXINFEEDPOWER = 1;
     public static final double MAXOUTFEEDPOWER = -1;
     public static final double INFEEDOFFPOWER = 0;
-    public static final double SERVOINCREMENTVALUE = .02;
-    public static final double LEFTSERVOMAXVALUE = 1;
-    public static final double LEFTSERVOMINVALUE = 0;
-    public static final double RIGHTSERVOMAXVALUE = 1;
-    public static final double RIGHTSERVOMINVALUE = 0;
 
     //GOOD VALUES
     public enum GOING {
@@ -68,25 +69,31 @@ public class TeleOpFinal extends OpMode {
     ModernRoboticsI2cRangeSensor range;
     @Override
     public void init() {
-        leftFrontWheel =hardwareMap.dcMotor.get(LEFT1NAME);
-        leftBackWheel =hardwareMap.dcMotor.get(LEFT2NAME);
-        rightFrontWheel =hardwareMap.dcMotor.get(RIGHT1NAME);
-        rightBackWheel =hardwareMap.dcMotor.get(RIGHT2NAME);
+        leftFrontWheel = hardwareMap.dcMotor.get(LEFT1NAME);
+        leftBackWheel = hardwareMap.dcMotor.get(LEFT2NAME);
+        rightFrontWheel = hardwareMap.dcMotor.get(RIGHT1NAME);
+        rightBackWheel = hardwareMap.dcMotor.get(RIGHT2NAME);
         rightFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        shoot1=hardwareMap.dcMotor.get(SHOOT1NAME);
+        shoot1 = hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
-        shoot2=hardwareMap.dcMotor.get(SHOOT2NAME);
-        infeed=hardwareMap.dcMotor.get(INFEEDNAME);
+        shoot2 = hardwareMap.dcMotor.get(SHOOT2NAME);
+        infeed = hardwareMap.dcMotor.get(INFEEDNAME);
         infeed.setDirection(DcMotorSimple.Direction.REVERSE);
-        ballBlock=hardwareMap.servo.get(BALLBLOCKNAME);
-        leftButtonPusher =hardwareMap.servo.get(LEFTPUSHNAME);
-        rightButtonPusher =hardwareMap.servo.get(RIGHTPUSHNAME);
+        ballBlock = hardwareMap.servo.get(BALLBLOCKNAME);
+        leftButtonPusher = hardwareMap.servo.get(LEFTPUSHNAME);
+        rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
         colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
+        colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
+        colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
+        colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
+        colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
+        colorSensorOnBottom.enableLed(true);
+        colorSensorOnSide.enableLed(false);
     }
 
     @Override
@@ -106,12 +113,13 @@ public class TeleOpFinal extends OpMode {
             INFEEDSTATUS =(INFEEDSTATUS == GOING.OUT) ? GOING.NOTGOING : GOING.OUT;
         }
         //Ternary Operations used to toggle INFEEDSTATUS
+        double multiplier = 1-(.7*gamepad2.left_trigger);
         switch(INFEEDSTATUS){
             case IN:
-                infeed.setPower(MAXINFEEDPOWER);
+                infeed.setPower(MAXINFEEDPOWER*multiplier);
                 break;
             case OUT:
-                infeed.setPower(MAXOUTFEEDPOWER);
+                infeed.setPower(MAXOUTFEEDPOWER*multiplier);
                 break;
             case NOTGOING:
                 infeed.setPower(INFEEDOFFPOWER);
