@@ -16,19 +16,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Arrays;
 
-@Autonomous(name="Red Alliance", group="Autonomous")
-public class AutoMecanumFinal extends LinearOpMode {
+@Autonomous(name="Red AllianceColors", group="Autonomous")
+public class AutoMecanumRedAlliace extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
-    public static final double MAXINFEEDPOWER = 1;
-    public static final double LEFTSERVOMAXVALUE = 1;
-    public static final double LEFTSERVOMINVALUE = .08;
-    public static final double RIGHTSERVOMAXVALUE = .94;
-    public static final double RIGHTSERVOMINVALUE = 0;
     public static final double DISTANCEBEFORESHOT = 1000;
     public static final double DISTANCETOTAL = 1500;
 
+    public enum AllianceColors {
+        RED, BLUE
+    }
+    public AllianceColors alliance = AllianceColors.RED;
 
     //GOOD VALUES
     public static final String LEFT1NAME = "l1"; //LX Port 2
@@ -44,6 +43,13 @@ public class AutoMecanumFinal extends LinearOpMode {
     public static final String RANGENAME = "r"; //Port 0
     public static final String COLORSIDENAME = "cs"; //Port 1
     public static final String COLORBOTTOMNAME = "cb";//Port 2
+    public static final double MAXINFEEDPOWER = 1;
+    public static final double LEFTSERVOMAXVALUE = 1;
+    public static final double LEFTSERVOMINVALUE = .08;
+    public static final double RIGHTSERVOMAXVALUE = .94;
+    public static final double RIGHTSERVOMINVALUE = 0;
+    public static double STRAFEFACTOR = 1;
+    public static double FORWARDSFACTOR = 1;
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
@@ -53,7 +59,9 @@ public class AutoMecanumFinal extends LinearOpMode {
     //Runs op mode
     @Override
     public void runOpMode() throws InterruptedException {
-
+        if(alliance == AllianceColors.BLUE){
+            FORWARDSFACTOR = -FORWARDSFACTOR; // Auto-Toggle the FORWARDSFACTOR is we are on the blue alliance
+        }
         leftFrontWheel= hardwareMap.dcMotor.get(LEFT1NAME);
         leftBackWheel = hardwareMap.dcMotor.get(LEFT2NAME);
         rightFrontWheel=hardwareMap.dcMotor.get(RIGHT1NAME);
@@ -141,6 +149,19 @@ public class AutoMecanumFinal extends LinearOpMode {
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
         /*
+                    _        _
+                   | |      | |
+          _ __ ___ | |_ __ _| |_ ___
+         | '__/ _ \| __/ _` | __/ _ \
+         | | | (_) | || (_| | ||  __/
+         |_|  \___/ \__\__,_|\__\___|
+         */
+        if(alliance == AllianceColors.BLUE){
+            //Rotate 180 degrees
+        } else {
+            //Don't rotate
+        }
+        /*
               _              __       _                        _ _
              | |            / _|     | |                      | | |
           ___| |_ _ __ __ _| |_ ___  | |_ ___   __      ____ _| | |
@@ -151,10 +172,10 @@ public class AutoMecanumFinal extends LinearOpMode {
         while(range.getDistance(DistanceUnit.CM) > 12){
             //strafes LEFT
             double  val = .5;
-            leftFrontWheel.setPower(val);
-            leftBackWheel.setPower(-val);
-            rightFrontWheel.setPower(-val);
-            rightBackWheel.setPower(val);
+            leftFrontWheel.setPower(val*STRAFEFACTOR);
+            leftBackWheel.setPower(-val*STRAFEFACTOR);
+            rightFrontWheel.setPower(-val*STRAFEFACTOR);
+            rightBackWheel.setPower(val*STRAFEFACTOR);
             telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
             telemetry.update();
         }
@@ -172,7 +193,7 @@ public class AutoMecanumFinal extends LinearOpMode {
                                  |___/
          */
         leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-        drive(.3, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(.3*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 300) {
             telemetry.addData("Left", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
             telemetry.update();
@@ -182,10 +203,10 @@ public class AutoMecanumFinal extends LinearOpMode {
         while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 150){
             //strafes LEFT
             double  val = -.2;
-            leftFrontWheel.setPower(val);
-            leftBackWheel.setPower(-val);
-            rightFrontWheel.setPower(-val);
-            rightBackWheel.setPower(val);
+            leftFrontWheel.setPower(val*STRAFEFACTOR);
+            leftBackWheel.setPower(-val*STRAFEFACTOR);
+            rightFrontWheel.setPower(-val*STRAFEFACTOR);
+            rightBackWheel.setPower(val*STRAFEFACTOR);
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
@@ -199,12 +220,12 @@ public class AutoMecanumFinal extends LinearOpMode {
                                 | |
                                 |_|
          */
-        drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(-.3*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4){
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         //Go back to combat overshoot
-        drive(.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(.1*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4) {
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
@@ -237,7 +258,7 @@ public class AutoMecanumFinal extends LinearOpMode {
                                 | |
                                 |_|
          */
-        drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(-.3*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(500);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
@@ -245,7 +266,7 @@ public class AutoMecanumFinal extends LinearOpMode {
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         //Go back to combat overshoot
-        drive(.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(.1*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4) {
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
