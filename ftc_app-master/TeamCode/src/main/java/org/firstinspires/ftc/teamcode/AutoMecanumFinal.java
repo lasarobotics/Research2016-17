@@ -268,7 +268,6 @@ public class AutoMecanumFinal extends LinearOpMode {
             rightButtonPusher.setPosition(RIGHTSERVOMINVALUE); //make sure it doesn't press the wrong button
         }
         sleep(500);
-        rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE); //disable servos
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE); //disable servos
 
