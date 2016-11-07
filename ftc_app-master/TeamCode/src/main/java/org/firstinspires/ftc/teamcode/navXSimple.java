@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.I2cDevice;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.navX.ftc.AHRS;
  * Created by Ethan Schaffer on 9/24/2016.
  */
 @Autonomous(name="navX", group="navX")
+@Disabled
 public class navXSimple extends LinearOpMode {
     AHRS navX;
     DeviceInterfaceModule dim;

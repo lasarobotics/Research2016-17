@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Arrays;
 
-@Autonomous(name="Color Sensing Line", group="Autonomous")
+@Autonomous(name="Color Sensors", group="Autonomous")
 public class TestColorSensingLine extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;

@@ -23,10 +23,10 @@ public class TeleOpFinal extends OpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
-    public static final double LEFTSERVOMAXVALUE = 1;
+    public static final double LEFTSERVOMAXVALUE = .75;
     public static final double LEFTSERVOMINVALUE = .08;
     public static final double RIGHTSERVOMAXVALUE = .94;
-    public static final double RIGHTSERVOMINVALUE = 0;
+    public static final double RIGHTSERVOMINVALUE = .25;
 
     public static final double SERVOINCREMENTVALUE = .02;
     public static final double MAXINFEEDPOWER = 1;

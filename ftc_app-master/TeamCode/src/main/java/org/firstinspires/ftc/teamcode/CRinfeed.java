@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  * Created by Ethan Schaffer on 9/24/2016.
  */
 @TeleOp(name="CR Servo", group = "TeleOp")
+@Disabled
 public class CRinfeed extends OpMode{
     CRServo left, right;
 

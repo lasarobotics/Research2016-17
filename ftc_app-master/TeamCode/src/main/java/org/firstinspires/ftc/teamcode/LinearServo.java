@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 /**
  * Created by Ethan Schaffer on 11/5/2016.
  */
-@TeleOp(name="Liner Servo", group="TeleOp")
+@TeleOp(name="Linear Servo", group="TeleOp")
 public class LinearServo extends OpMode {
     Servo linear;
 
