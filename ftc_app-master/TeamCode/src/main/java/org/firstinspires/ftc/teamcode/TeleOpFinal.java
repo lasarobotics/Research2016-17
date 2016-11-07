@@ -46,7 +46,7 @@ public class TeleOpFinal extends OpMode {
     public static final double SHOOTERMAXVALUE = 1;
     public static final double SHOOTERMINVALUE = 0;
     public static final double SHOOTERTHRESHOLD = .2;
-    public static final double SHOOTERLOWERRATE = 0;
+    public static final double SHOOTERLOWERRATE = 1.75;
 
     public static final String LEFT1NAME = "l1"; //LX Port 2
     public static final String LEFT2NAME = "l2"; //LX Port 1
