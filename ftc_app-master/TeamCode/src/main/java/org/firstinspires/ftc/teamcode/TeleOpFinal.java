@@ -67,6 +67,7 @@ public class TeleOpFinal extends OpMode {
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
     ColorSensor colorSensorOnSide, colorSensorOnBottom;
     ModernRoboticsI2cRangeSensor range;
+
     @Override
     public void init() {
         leftFrontWheel = hardwareMap.dcMotor.get(LEFT1NAME);
@@ -99,14 +100,14 @@ public class TeleOpFinal extends OpMode {
     @Override
     public void loop() {
 
-/*
-  _        __              _
- (_)      / _|            | |
-  _ _ __ | |_ ___  ___  __| |
- | | '_ \|  _/ _ \/ _ \/ _` |
- | | | | | ||  __/  __/ (_| |
- |_|_| |_|_| \___|\___|\__,_|
-*/
+        /*
+          _        __              _
+         (_)      / _|            | |
+          _ _ __ | |_ ___  ___  __| |
+         | | '_ \|  _/ _ \/ _ \/ _` |
+         | | | | | ||  __/  __/ (_| |
+         |_|_| |_|_| \___|\___|\__,_|
+        */
         if(RECENTLEFTBUMPERVALUE && !gamepad2.left_bumper){
             INFEEDSTATUS =(INFEEDSTATUS == GOING.IN) ? GOING.NOTGOING : GOING.IN;
         } else if (RECENTRIGHTBUMPERVALUE && !gamepad2.right_bumper){
@@ -129,14 +130,14 @@ public class TeleOpFinal extends OpMode {
         RECENTLEFTBUMPERVALUE = gamepad2.left_bumper;
         RECENTRIGHTBUMPERVALUE = gamepad2.right_bumper;
 
-/*
-      _      _
-     | |    (_)
-   __| |_ __ ___   _____
-  / _` | '__| \ \ / / _ \
- | (_| | |  | |\ V /  __/
-  \__,_|_|  |_| \_/ \___|
- */
+        /*
+              _      _
+             | |    (_)
+           __| |_ __ ___   _____
+          / _` | '__| \ \ / / _ \
+         | (_| | |  | |\ V /  __/
+          \__,_|_|  |_| \_/ \___|
+         */
         double inputX = Math.abs(gamepad1.left_stick_y) > ACCEPTINPUTTHRESHOLD ? -gamepad1.left_stick_y : 0;
         double inputY = Math.abs(gamepad1.left_stick_x) > ACCEPTINPUTTHRESHOLD ? gamepad1.left_stick_x : 0;
         double inputC = Math.abs(gamepad1.right_stick_x)> ACCEPTINPUTTHRESHOLD ? -gamepad1.right_stick_x: 0;
@@ -152,24 +153,23 @@ public class TeleOpFinal extends OpMode {
         //Use the larger trigger value to scale down the inputs.
         arcadeMecanum(inputX, inputY, inputC, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
-/*
-  ___  ___ _ ____   _____
- / __|/ _ \ '__\ \ / / _ \
- \__ \  __/ |   \ V / (_) |
- |___/\___|_|    \_/ \___/
- */
-
+        /*
+          ___  ___ _ ____   _____
+         / __|/ _ \ '__\ \ / / _ \
+         \__ \  __/ |   \ V / (_) |
+         |___/\___|_|    \_/ \___/
+         */
         setServo(leftButtonPusher, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
         setServo(rightButtonPusher, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
 
-/*
-      _                 _
-     | |               | |
-  ___| |__   ___   ___ | |_
- / __| '_ \ / _ \ / _ \| __|
- \__ \ | | | (_) | (_) | |_
- |___/_| |_|\___/ \___/ \__|
-*/
+        /*
+              _                 _
+             | |               | |
+          ___| |__   ___   ___ | |_
+         / __| '_ \ / _ \ / _ \| __|
+         \__ \ | | | (_) | (_) | |_
+         |___/_| |_|\___/ \___/ \__|
+        */
         shoot((gamepad1.right_bumper || gamepad1.left_bumper), ballBlock, shoot1, shoot2,
                 BLOCKSERVOOPENVALUE, BLOCKSERVOCLOSEDVALUE,
                 SHOOTERLOWERRATE, SHOOTERMAXVALUE, SHOOTERMINVALUE, SHOOTERTHRESHOLD);
@@ -177,16 +177,16 @@ public class TeleOpFinal extends OpMode {
         //This will hopefully help us to avoid breakage of the gearbox.
 
 
-/*
-  _       _                     _
- | |     | |                   | |
- | |_ ___| | ___ _ __ ___   ___| |_ _ __ _   _
- | __/ _ \ |/ _ \ '_ ` _ \ / _ \ __| '__| | | |
- | ||  __/ |  __/ | | | | |  __/ |_| |  | |_| |
-  \__\___|_|\___|_| |_| |_|\___|\__|_|   \__, |
-                                          __/ |
-                                         |___/
-*/
+        /*
+          _       _                     _
+         | |     | |                   | |
+         | |_ ___| | ___ _ __ ___   ___| |_ _ __ _   _
+         | __/ _ \ |/ _ \ '_ ` _ \ / _ \ __| '__| | | |
+         | ||  __/ |  __/ | | | | |  __/ |_| |  | |_| |
+          \__\___|_|\___|_| |_| |_|\___|\__|_|   \__, |
+                                                  __/ |
+                                                 |___/
+        */
         telemetry.addData("leftServo", leftButtonPusher.getPosition());
         telemetry.addData("rightServo", rightButtonPusher.getPosition());
         telemetry.addData("Controller LeftY", gamepad1.left_stick_y);

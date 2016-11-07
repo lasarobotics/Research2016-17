@@ -13,8 +13,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 import java.util.Arrays;
 
 @Autonomous(name="Color Sensing Line", group="Autonomous")
@@ -43,7 +41,7 @@ public class TestColorSensingLine extends LinearOpMode {
     public static final String COLORSIDENAME = "cs"; //Port 1
     public static final String COLORBOTTOMNAME = "cb";//Port 2
 
-    DcMotor leftFrontWheel, leftbBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
+    DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
     ColorSensor colorSensorOnBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
@@ -53,11 +51,11 @@ public class TestColorSensingLine extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         leftFrontWheel= hardwareMap.dcMotor.get(LEFT1NAME);
-        leftbBackWheel= hardwareMap.dcMotor.get(LEFT2NAME);
+        leftBackWheel = hardwareMap.dcMotor.get(LEFT2NAME);
         rightFrontWheel=hardwareMap.dcMotor.get(RIGHT1NAME);
         rightBackWheel= hardwareMap.dcMotor.get(RIGHT2NAME);
         leftFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftbBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot1=hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot2=hardwareMap.dcMotor.get(SHOOT2NAME);
@@ -84,18 +82,18 @@ public class TestColorSensingLine extends LinearOpMode {
         //WAIT FOR START IS HERE
         waitForStart();
 
-        drive(-.2, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4){
             telemetry.addData("A", colorSensorOnBottom.alpha() < 4);
             telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        drive(.1, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(.1, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4){
             telemetry.addData("A", colorSensorOnBottom.alpha() < 4);
             telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
         //AT FIRST BEACON
         telemetry.addData("Red Value, First Beacon", colorSensorOnSide.red());
@@ -107,13 +105,13 @@ public class TestColorSensingLine extends LinearOpMode {
         }
         sleep(1000);
 /*
-        drive(-.2, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(500);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         while( colorSensorOnBottom.alpha() < 4) {
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         //AT SECOND BEACON
         telemetry.addData("Red Value, Second Beacon", colorSensorOnSide.red());
         telemetry.update();

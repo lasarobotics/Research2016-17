@@ -26,6 +26,9 @@ public class AutoMecanumFinal extends LinearOpMode {
     public static final double LEFTSERVOMINVALUE = .08;
     public static final double RIGHTSERVOMAXVALUE = .94;
     public static final double RIGHTSERVOMINVALUE = 0;
+    public static final double DISTANCEBEFORESHOT = 1000;
+    public static final double DISTANCETOTAL = 1500;
+
 
     //GOOD VALUES
     public static final String LEFT1NAME = "l1"; //LX Port 2
@@ -42,7 +45,7 @@ public class AutoMecanumFinal extends LinearOpMode {
     public static final String COLORSIDENAME = "cs"; //Port 1
     public static final String COLORBOTTOMNAME = "cb";//Port 2
 
-    DcMotor leftFrontWheel, leftbBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
+    DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
     ColorSensor colorSensorOnBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
@@ -52,11 +55,11 @@ public class AutoMecanumFinal extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         leftFrontWheel= hardwareMap.dcMotor.get(LEFT1NAME);
-        leftbBackWheel= hardwareMap.dcMotor.get(LEFT2NAME);
+        leftBackWheel = hardwareMap.dcMotor.get(LEFT2NAME);
         rightFrontWheel=hardwareMap.dcMotor.get(RIGHT1NAME);
         rightBackWheel= hardwareMap.dcMotor.get(RIGHT2NAME);
         leftFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftbBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot1=hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot2=hardwareMap.dcMotor.get(SHOOT2NAME);
@@ -78,96 +81,196 @@ public class AutoMecanumFinal extends LinearOpMode {
         }//wait
         int leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
 
-        //WAIT FOR START IS HERE
+        /*                _ _    __               _             _
+                       (_) |  / _|             | |           | |
+         __      ____ _ _| |_| |_ ___  _ __ ___| |_ __ _ _ __| |_
+         \ \ /\ / / _` | | __|  _/ _ \| '__/ __| __/ _` | '__| __|
+          \ V  V / (_| | | |_| || (_) | |  \__ \ || (_| | |  | |_
+           \_/\_/ \__,_|_|\__|_| \___/|_|  |___/\__\__,_|_|   \__|
+        */
         waitForStart();
-
-        resetEncs(leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        /*
+                _ _                _               _                 _
+               | (_)              | |             | |               | |
+           __ _| |_  __ _ _ __    | |_ ___     ___| |__   ___   ___ | |_
+          / _` | | |/ _` | '_ \   | __/ _ \   / __| '_ \ / _ \ / _ \| __|
+         | (_| | | | (_| | | | |  | || (_) |  \__ \ | | | (_) | (_) | |_
+          \__,_|_|_|\__, |_| |_|   \__\___/   |___/_| |_|\___/ \___/ \__|
+                     __/ |
+                    |___/
+        */
+        resetEncs(leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         telemetry.addData("Left", leftFrontWheelEncoderPosition);
         telemetry.update();
-        drive(-.85, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 1000) {
+        drive(-.85, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < DISTANCEBEFORESHOT) {
             telemetry.addData("Left Encoder", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
             telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+
+        /*
+              _                 _
+             | |               | |
+          ___| |__   ___   ___ | |_
+         / __| '_ \ / _ \ / _ \| __|
+         \__ \ | | | (_) | (_) | |_
+         |___/_| |_|\___/ \___/ \__|
+         */
         ballBlock.setPosition(BLOCKSERVOOPENVALUE); //Make sure to update
         shoot1.setPower(1); shoot2.setPower(1);
         infeed.setPower(MAXINFEEDPOWER);
-        sleep(1000);
+        sleep(1000);//can adjust
         shoot1.setPower(0); shoot2.setPower(0);
         ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
         infeed.setPower(0);
-        drive(-.85, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 1500) {
+        drive(-.85, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+
+        /*
+           __                                 _
+          / _|                               | |
+         | |_ ___  _ ____      ____ _ _ __ __| |___   _ __ ___   ___  _ __ ___
+         |  _/ _ \| '__\ \ /\ / / _` | '__/ _` / __| | '_ ` _ \ / _ \| '__/ _ \
+         | || (_) | |   \ V  V / (_| | | | (_| \__ \ | | | | | | (_) | | |  __/
+         |_| \___/|_|    \_/\_/ \__,_|_|  \__,_|___/ |_| |_| |_|\___/|_|  \___|
+        */
+        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < DISTANCETOTAL) {
             telemetry.addData("Left Encoder", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
             telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
+        /*
+              _              __       _                        _ _
+             | |            / _|     | |                      | | |
+          ___| |_ _ __ __ _| |_ ___  | |_ ___   __      ____ _| | |
+         / __| __| '__/ _` |  _/ _ \ | __/ _ \  \ \ /\ / / _` | | |
+         \__ \ |_| | | (_| | ||  __/ | || (_) |  \ V  V / (_| | | |
+         |___/\__|_|  \__,_|_| \___|  \__\___/    \_/\_/ \__,_|_|_|
+         */
         while(range.getDistance(DistanceUnit.CM) > 12){
             //strafes LEFT
             double  val = .5;
             leftFrontWheel.setPower(val);
-            leftbBackWheel.setPower(-val);
+            leftBackWheel.setPower(-val);
             rightFrontWheel.setPower(-val);
             rightBackWheel.setPower(val);
             telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
             telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         telemetry.update();
+
+        /*
+           __ _              _ _                                  _
+          / _(_)            | (_)                                | |
+         | |_ ___  __   __ _| |_  __ _ _ __  _ __ ___   ___ _ __ | |_
+         |  _| \ \/ /  / _` | | |/ _` | '_ \| '_ ` _ \ / _ \ '_ \| __|
+         | | | |>  <  | (_| | | | (_| | | | | | | | | |  __/ | | | |_
+         |_| |_/_/\_\  \__,_|_|_|\__, |_| |_|_| |_| |_|\___|_| |_|\__|
+                                  __/ |
+                                 |___/
+         */
         leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-        drive(.3, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(.3, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 300) {
             telemetry.addData("Left", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
             telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
         while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 150){
             //strafes LEFT
             double  val = -.2;
             leftFrontWheel.setPower(val);
-            leftbBackWheel.setPower(-val);
+            leftBackWheel.setPower(-val);
             rightFrontWheel.setPower(-val);
             rightBackWheel.setPower(val);
-            telemetry.addData("raw ultrasonic", range.getDistance(DistanceUnit.CM));
-            telemetry.update();
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
-        drive(-.2, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        /*
+          _ _
+         | (_)
+         | |_ _ __   ___   _   _ _ __
+         | | | '_ \ / _ \ | | | | '_ \
+         | | | | | |  __/ | |_| | |_) |
+         |_|_|_| |_|\___|  \__,_| .__/
+                                | |
+                                |_|
+         */
+        drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 4){
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        //Go back to combat overshoot
+        drive(.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        while( colorSensorOnBottom.alpha() < 4) {
+        }
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+
 
         //AT FIRST BEACON
+        /*
+          _ __  _ __ ___  ___ ___
+         | '_ \| '__/ _ \/ __/ __|
+         | |_) | | |  __/\__ \__ \
+         | .__/|_|  \___||___/___/
+         | |
+         |_|
+         */
         telemetry.addData("Red Value, First Beacon", colorSensorOnSide.red());
-        if(colorSensorOnSide.red() > 3){
+        if(colorSensorOnSide.red() > colorSensorOnSide.blue()){
             rightButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         } else {
             leftButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         }
         sleep(1000);
 
-        drive(-.2, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        /*
+          _ _
+         | (_)
+         | |_ _ __   ___   _   _ _ __
+         | | | '_ \ / _ \ | | | | '_ \
+         | | | | | |  __/ | |_| | |_) |
+         |_|_|_| |_|\___|  \__,_| .__/
+                                | |
+                                |_|
+         */
+        drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(500);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         while( colorSensorOnBottom.alpha() < 4) {
         }
-        drive(0, leftFrontWheel, rightFrontWheel, leftbBackWheel, rightBackWheel);
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        //Go back to combat overshoot
+        drive(.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        while( colorSensorOnBottom.alpha() < 4) {
+        }
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+
         //AT SECOND BEACON
+        /*
+          _ __  _ __ ___  ___ ___
+         | '_ \| '__/ _ \/ __/ __|
+         | |_) | | |  __/\__ \__ \
+         | .__/|_|  \___||___/___/
+         | |
+         |_|
+         */
         telemetry.addData("Red Value, Second Beacon", colorSensorOnSide.red());
-        if(colorSensorOnSide.red() > 3){
+        if(colorSensorOnSide.red() > colorSensorOnSide.blue()){
             rightButtonPusher.setPosition(RIGHTSERVOMAXVALUE);
+            leftButtonPusher.setPosition(LEFTSERVOMAXVALUE); //make sure it doesn't press the wrong button
         } else {
             leftButtonPusher.setPosition(LEFTSERVOMINVALUE);
+            rightButtonPusher.setPosition(RIGHTSERVOMINVALUE); //make sure it doesn't press the wrong button
         }
         sleep(500);
-        leftButtonPusher.setPosition(LEFTSERVOMINVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
-
+        leftButtonPusher.setPosition(LEFTSERVOMAXVALUE); //disable servos
+        rightButtonPusher.setPosition(RIGHTSERVOMINVALUE); //disable servos
 
     }
 
