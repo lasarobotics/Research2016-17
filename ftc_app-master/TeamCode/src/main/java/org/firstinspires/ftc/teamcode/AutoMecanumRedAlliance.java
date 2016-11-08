@@ -4,6 +4,7 @@ https://ftcprogramming.wordpress.com/2015/11/30/building-ftc_app-wirelessly/
 */
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import java.util.Arrays;
 
 @Autonomous(name="Red Alliance", group="Autonomous")
-public class AutoMecanumRedAlliace extends LinearOpMode {
+public class AutoMecanumRedAlliance extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
@@ -38,6 +39,7 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
     public static final String SHOOT1NAME = "sh1";//PN Port 1
     public static final String SHOOT2NAME = "sh2";//PN Port 2
     public static final String INFEEDNAME = "in"; //2S Port 2
+    public static final String GYRONAME = "g"; //Port 4
     public static final String BALLBLOCKNAME = "b";//MO Port 3
     public static final String LEFTPUSHNAME = "lp";//MO Port 1
     public static final String RIGHTPUSHNAME = "rp";//MO Port 2
@@ -56,6 +58,7 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
     ColorSensor colorSensorOnBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
+    ModernRoboticsI2cGyro gyroSensor;
 
     //Runs op mode
     @Override
@@ -84,14 +87,16 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
         colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
         colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
-
+        gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, GYRONAME);
+        gyroSensor.calibrate();
+        while(gyroSensor.isCalibrating()){
+            telemetry.addData("Gyro", "Calibrating...");
+            telemetry.update();
+        }
+        telemetry.addData("Gyro", "Calibrated");
         telemetry.addData("raw ultrasonic", range.rawUltrasonic());
         telemetry.update();
 
-        leftFrontWheel.setMode(DcMotor.RunMode.RESET_ENCODERS);
-        while(leftFrontWheel.getCurrentPosition()!=0){
-        }//wait
-        int leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
 
         /*                _ _    __               _             _
                        (_) |  / _|             | |           | |
@@ -101,6 +106,15 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
            \_/\_/ \__,_|_|\__|_| \___/|_|  |___/\__\__,_|_|   \__|
         */
         waitForStart();
+        leftFrontWheel.setMode(DcMotor.RunMode.RESET_ENCODERS);
+        while(leftFrontWheel.getCurrentPosition()!=0){
+        }//wait
+        int leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
+        double gyroReadingTarget = gyroSensor.getIntegratedZValue();
+        if(alliance == AllianceColors.BLUE){
+            gyroReadingTarget+=180;
+            gyroReadingTarget = gyroReadingTarget%360;
+        }
         /*
                 _ _                _               _                 _
                | (_)              | |             | |               | |
@@ -160,11 +174,23 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
          | | | (_) | || (_| | ||  __/
          |_|  \___/ \__\__,_|\__\___|
          */
-        if(alliance == AllianceColors.BLUE){
-            //Rotate 180 degrees
-        } else {
-            //Don't rotate
+        if(alliance == AllianceColors.BLUE) {
+            while (gyroSensor.getIntegratedZValue() != gyroReadingTarget) {
+                double power = Math.abs(gyroSensor.getIntegratedZValue() - gyroReadingTarget);
+                if (gyroSensor.getIntegratedZValue() > gyroReadingTarget) {
+                    leftFrontWheel.setPower(power);
+                    leftBackWheel.setPower(power);
+                    rightFrontWheel.setPower(-power);
+                    rightBackWheel.setPower(-power);
+                } else {
+                    leftFrontWheel.setPower(-power);
+                    leftBackWheel.setPower(-power);
+                    rightFrontWheel.setPower(power);
+                    rightBackWheel.setPower(power);
+                }
+            }
         }
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         /*
               _              __       _                        _ _
              | |            / _|     | |                      | | |
@@ -247,6 +273,21 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
                                 | |
                                 |_|
          */
+        while(gyroSensor.getIntegratedZValue() != gyroReadingTarget){
+            double power = Math.abs(gyroSensor.getIntegratedZValue() - gyroReadingTarget);
+            if(gyroSensor.getIntegratedZValue() > gyroReadingTarget){
+                leftFrontWheel.setPower(power);
+                leftBackWheel.setPower(power);
+                rightFrontWheel.setPower(-power);
+                rightBackWheel.setPower(-power);
+            }
+            else {
+                leftFrontWheel.setPower(-power);
+                leftBackWheel.setPower(-power);
+                rightFrontWheel.setPower(power);
+                rightBackWheel.setPower(power);
+            }
+        }
         drive(-.2*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 3){
             telemetry.addData("Alpha", colorSensorOnBottom.alpha());
