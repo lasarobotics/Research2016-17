@@ -32,12 +32,13 @@ public class TeleOpFinal extends OpMode {
     public static final double MAXINFEEDPOWER = 1;
     public static final double MAXOUTFEEDPOWER = -1;
     public static final double INFEEDOFFPOWER = 0;
+    public static final double INFEEDTHRESHOLD = 0;
 
     //GOOD VALUES
     public enum GOING {
         IN, OUT, NOTGOING
     }
-    public GOING INFEEDSTATUS = GOING.NOTGOING;
+    public GOING SHOOTERSTATUS = GOING.NOTGOING;
     public boolean RECENTLEFTBUMPERVALUE = false;
     public boolean RECENTRIGHTBUMPERVALUE = false;
     public static final double SLOWDOWNVALUE = 5;
@@ -108,24 +109,38 @@ public class TeleOpFinal extends OpMode {
          | | | | | ||  __/  __/ (_| |
          |_|_| |_|_| \___|\___|\__,_|
         */
+        infeed.setPower(Math.abs(gamepad2.left_stick_y) > INFEEDTHRESHOLD ? gamepad2.left_stick_y : 0);
+
+        /*
+              _                 _
+             | |               | |
+          ___| |__   ___   ___ | |_
+         / __| '_ \ / _ \ / _ \| __|
+         \__ \ | | | (_) | (_) | |_
+         |___/_| |_|\___/ \___/ \__|
+        */
+
         if(RECENTLEFTBUMPERVALUE && !gamepad2.left_bumper){
-            INFEEDSTATUS =(INFEEDSTATUS == GOING.IN) ? GOING.NOTGOING : GOING.IN;
+            SHOOTERSTATUS =(SHOOTERSTATUS == GOING.IN) ? GOING.NOTGOING : GOING.IN;
         } else if (RECENTRIGHTBUMPERVALUE && !gamepad2.right_bumper){
-            INFEEDSTATUS =(INFEEDSTATUS == GOING.OUT) ? GOING.NOTGOING : GOING.OUT;
+            SHOOTERSTATUS =(SHOOTERSTATUS == GOING.OUT) ? GOING.NOTGOING : GOING.OUT;
         }
         //Ternary Operations used to toggle INFEEDSTATUS
-        double multiplier = 1-(.7*gamepad2.left_trigger);
-        switch(INFEEDSTATUS){
+        switch(SHOOTERSTATUS){
             case IN:
-                infeed.setPower(MAXINFEEDPOWER*multiplier);
+                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
+                shoot1.setPower(SHOOTERMAXVALUE);
+                shoot2.setPower(SHOOTERMAXVALUE);
                 break;
             case OUT:
-                infeed.setPower(MAXOUTFEEDPOWER*multiplier);
+                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
+                shoot1.setPower(-SHOOTERMAXVALUE);
+                shoot2.setPower(-SHOOTERMAXVALUE);
                 break;
-            case NOTGOING:
-                infeed.setPower(INFEEDOFFPOWER);
             default:
-                infeed.setPower(INFEEDOFFPOWER);
+                ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE);
+                shoot1.setPower(0);
+                shoot2.setPower(0);
         }
         RECENTLEFTBUMPERVALUE = gamepad2.left_bumper;
         RECENTRIGHTBUMPERVALUE = gamepad2.right_bumper;
@@ -140,7 +155,7 @@ public class TeleOpFinal extends OpMode {
          */
         double inputX = Math.abs(gamepad1.left_stick_y) > ACCEPTINPUTTHRESHOLD ? -gamepad1.left_stick_y : 0;
         double inputY = Math.abs(gamepad1.left_stick_x) > ACCEPTINPUTTHRESHOLD ? gamepad1.left_stick_x : 0;
-        double inputC = Math.abs(gamepad1.right_stick_x)> ACCEPTINPUTTHRESHOLD ? -gamepad1.right_stick_x: 0;
+        double inputC = Math.abs(gamepad1.right_stick_x)> ACCEPTINPUTTHRESHOLD ? gamepad1.right_stick_x: 0;
 
         double BIGGERTRIGGER = gamepad1.left_trigger > gamepad1.right_trigger ? gamepad1.left_trigger : gamepad1.right_trigger;
         //Ternary, the larger trigger value is set to the value BIGGERTRIGGER
@@ -162,19 +177,6 @@ public class TeleOpFinal extends OpMode {
         setServo(leftButtonPusher, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
         setServo(rightButtonPusher, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
 
-        /*
-              _                 _
-             | |               | |
-          ___| |__   ___   ___ | |_
-         / __| '_ \ / _ \ / _ \| __|
-         \__ \ | | | (_) | (_) | |_
-         |___/_| |_|\___/ \___/ \__|
-        */
-        shoot((gamepad1.right_bumper || gamepad1.left_bumper), ballBlock, shoot1, shoot2,
-                BLOCKSERVOOPENVALUE, BLOCKSERVOCLOSEDVALUE,
-                SHOOTERLOWERRATE, SHOOTERMAXVALUE, SHOOTERMINVALUE, SHOOTERTHRESHOLD);
-        //The shooter will shoot at full power, will slow down by diving it's power by 1.5, and will stop completely once it's power is lower than .2.
-        //This will hopefully help us to avoid breakage of the gearbox.
 
 
         /*
@@ -192,7 +194,7 @@ public class TeleOpFinal extends OpMode {
         telemetry.addData("Controller LeftY", gamepad1.left_stick_y);
         telemetry.addData("Controller LeftX", gamepad1.left_stick_x);
         telemetry.addData("Controller RightY", gamepad1.right_stick_y);
-        telemetry.addData("Infeed", INFEEDSTATUS == GOING.IN ? "Forwards" : INFEEDSTATUS == GOING.OUT ? "Backwards" : "None");
+        telemetry.addData("Infeed", SHOOTERSTATUS == GOING.IN ? "Forwards" : SHOOTERSTATUS == GOING.OUT ? "Backwards" : "None");
         //Ternary, basically it just outputs the Infeed state.
         telemetry.update();
         //Servos can be set to go between 1 and 0, and will be incremented by 2% of their range each cycle.

@@ -10,13 +10,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Arrays;
 
-@Autonomous(name="Red AllianceColors", group="Autonomous")
+@Autonomous(name="Red Alliance", group="Autonomous")
 public class AutoMecanumRedAlliace extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
@@ -81,6 +82,9 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
         colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
+        colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
+        colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
+
         telemetry.addData("raw ultrasonic", range.rawUltrasonic());
         telemetry.update();
 
@@ -128,7 +132,7 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
         ballBlock.setPosition(BLOCKSERVOOPENVALUE); //Make sure to update
         shoot1.setPower(1); shoot2.setPower(1);
         infeed.setPower(MAXINFEEDPOWER);
-        sleep(1000);//can adjust
+        sleep(1500);//can adjust
         shoot1.setPower(0); shoot2.setPower(0);
         ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
         infeed.setPower(0);
@@ -169,6 +173,28 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
          \__ \ |_| | | (_| | ||  __/ | || (_) |  \ V  V / (_| | | |
          |___/\__|_|  \__,_|_| \___|  \__\___/    \_/\_/ \__,_|_|_|
          */
+        leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
+        while(Math.abs(leftFrontWheel.getCurrentPosition() + leftFrontWheelEncoderPosition) < 250){
+            double  val = .5;
+            leftFrontWheel.setPower(val);
+            leftBackWheel.setPower(-val);
+            rightFrontWheel.setPower(-val);
+            rightBackWheel.setPower(val);
+        }
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        sleep(100);
+
+        leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
+        while(Math.abs(leftFrontWheel.getCurrentPosition() + leftFrontWheelEncoderPosition) < 1250){
+            double  val = -.5;
+            leftFrontWheel.setPower(val);
+            leftBackWheel.setPower(val);
+            rightFrontWheel.setPower(val);
+            rightBackWheel.setPower(val);
+        }
+        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        sleep(100);
+
         while(range.getDistance(DistanceUnit.CM) > 12){
             //strafes LEFT
             double  val = .5;
@@ -192,13 +218,14 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
                                   __/ |
                                  |___/
          */
-        leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
+/*        leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
         drive(.3*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 300) {
+        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 500) {
             telemetry.addData("Left", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
             telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+*/
         leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
         while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < 150){
             //strafes LEFT
@@ -220,13 +247,17 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
                                 | |
                                 |_|
          */
-        drive(-.3*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-        while( colorSensorOnBottom.alpha() < 4){
+        drive(-.2*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        while( colorSensorOnBottom.alpha() < 3){
+            telemetry.addData("Alpha", colorSensorOnBottom.alpha());
+            telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         //Go back to combat overshoot
         drive(.1*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-        while( colorSensorOnBottom.alpha() < 4) {
+        while( colorSensorOnBottom.alpha() < 3) {
+            telemetry.addData("Alpha", colorSensorOnBottom.alpha());
+            telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
@@ -241,10 +272,12 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
          |_|
          */
         telemetry.addData("Red Value, First Beacon", colorSensorOnSide.red());
-        if(colorSensorOnSide.red() > colorSensorOnSide.blue()){
-            rightButtonPusher.setPosition(LEFTSERVOMAXVALUE);
+        if(colorSensorOnSide.red() < colorSensorOnSide.blue()){
+            rightButtonPusher.setPosition(RIGHTSERVOMAXVALUE);
+            leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         } else {
-            leftButtonPusher.setPosition(RIGHTSERVOMINVALUE);
+            leftButtonPusher.setPosition(LEFTSERVOMINVALUE);
+            rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
         }
         sleep(1000);
 
@@ -258,16 +291,20 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
                                 | |
                                 |_|
          */
-        drive(-.3*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        drive(-.2*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(500);
         leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
         rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
-        while( colorSensorOnBottom.alpha() < 4) {
+        while( colorSensorOnBottom.alpha() < 3) {
+            telemetry.addData("Alpha", colorSensorOnBottom.alpha());
+            telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         //Go back to combat overshoot
         drive(.1*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-        while( colorSensorOnBottom.alpha() < 4) {
+        while( colorSensorOnBottom.alpha() < 3) {
+            telemetry.addData("Alpha", colorSensorOnBottom.alpha());
+            telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
@@ -281,7 +318,7 @@ public class AutoMecanumRedAlliace extends LinearOpMode {
          |_|
          */
         telemetry.addData("Red Value, Second Beacon", colorSensorOnSide.red());
-        if(colorSensorOnSide.red() > colorSensorOnSide.blue()){
+        if(colorSensorOnSide.red() < colorSensorOnSide.blue()){
             rightButtonPusher.setPosition(RIGHTSERVOMAXVALUE);
             leftButtonPusher.setPosition(LEFTSERVOMAXVALUE); //make sure it doesn't press the wrong button
         } else {
