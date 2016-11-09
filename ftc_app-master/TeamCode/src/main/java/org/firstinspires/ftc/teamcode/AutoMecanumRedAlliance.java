@@ -23,8 +23,12 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
-    public static final double DISTANCEBEFORESHOT = 1000;
-    public static final double DISTANCETOTAL = 1500;
+    public static final double DISTANCEBEFORESHOT = 1500;
+    public static final double DISTANCEBACKPOSTSHOT = -300;
+    public static final double DISTANCESTRAFEPOSTSHOT = 500;
+    public static final double DISTANCEPOSTSTRAFEPOSTSHOT = 750;
+
+    public static final double GYROOFFSETDIVIDEFACTOR = 360;
 
     public enum AllianceColors {
         RED, BLUE
@@ -150,7 +154,6 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
         shoot1.setPower(0); shoot2.setPower(0);
         ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE); //Make sure to update
         infeed.setPower(0);
-        drive(-.85, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
         /*
            __                                 _
@@ -160,37 +163,13 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
          | || (_) | |   \ V  V / (_| | | | (_| \__ \ | | | | | | (_) | | |  __/
          |_| \___/|_|    \_/\_/ \__,_|_|  \__,_|___/ |_| |_| |_|\___/|_|  \___|
         */
-        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) < DISTANCETOTAL) {
+        drive(.45, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        while(Math.abs((leftFrontWheel.getCurrentPosition()-leftFrontWheelEncoderPosition)) > DISTANCEBEFORESHOT + DISTANCEBACKPOSTSHOT) {
             telemetry.addData("Left Encoder", leftFrontWheel.getCurrentPosition() - leftFrontWheelEncoderPosition);
             telemetry.update();
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
 
-        /*
-                    _        _
-                   | |      | |
-          _ __ ___ | |_ __ _| |_ ___
-         | '__/ _ \| __/ _` | __/ _ \
-         | | | (_) | || (_| | ||  __/
-         |_|  \___/ \__\__,_|\__\___|
-         */
-        if(alliance == AllianceColors.BLUE) {
-            while (gyroSensor.getIntegratedZValue() != gyroReadingTarget) {
-                double power = Math.abs(gyroSensor.getIntegratedZValue() - gyroReadingTarget);
-                if (gyroSensor.getIntegratedZValue() > gyroReadingTarget) {
-                    leftFrontWheel.setPower(power);
-                    leftBackWheel.setPower(power);
-                    rightFrontWheel.setPower(-power);
-                    rightBackWheel.setPower(-power);
-                } else {
-                    leftFrontWheel.setPower(-power);
-                    leftBackWheel.setPower(-power);
-                    rightFrontWheel.setPower(power);
-                    rightBackWheel.setPower(power);
-                }
-            }
-        }
-        drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         /*
               _              __       _                        _ _
              | |            / _|     | |                      | | |
@@ -200,8 +179,8 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
          |___/\__|_|  \__,_|_| \___|  \__\___/    \_/\_/ \__,_|_|_|
          */
         leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-        while(Math.abs(leftFrontWheel.getCurrentPosition() + leftFrontWheelEncoderPosition) < 250){
-            double  val = .5;
+        while(Math.abs(leftFrontWheel.getCurrentPosition() + leftFrontWheelEncoderPosition) < DISTANCESTRAFEPOSTSHOT){
+            double val = .5;
             leftFrontWheel.setPower(val);
             leftBackWheel.setPower(-val);
             rightFrontWheel.setPower(-val);
@@ -210,8 +189,9 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(100);
 
+        resetEncs(leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel);
         leftFrontWheelEncoderPosition = leftFrontWheel.getCurrentPosition();
-        while(Math.abs(leftFrontWheel.getCurrentPosition() + leftFrontWheelEncoderPosition) < 1250){
+        while(Math.abs(leftFrontWheel.getCurrentPosition() + leftFrontWheelEncoderPosition) < DISTANCEPOSTSTRAFEPOSTSHOT){
             double  val = -.5;
             leftFrontWheel.setPower(val);
             leftBackWheel.setPower(val);
@@ -273,8 +253,9 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
                                 | |
                                 |_|
          */
+/*
         while(gyroSensor.getIntegratedZValue() != gyroReadingTarget){
-            double power = Math.abs(gyroSensor.getIntegratedZValue() - gyroReadingTarget);
+            double power = Math.abs(gyroSensor.getIntegratedZValue() - gyroReadingTarget)/GYROOFFSETDIVIDEFACTOR;
             if(gyroSensor.getIntegratedZValue() > gyroReadingTarget){
                 leftFrontWheel.setPower(power);
                 leftBackWheel.setPower(power);
@@ -288,6 +269,7 @@ public class AutoMecanumRedAlliance extends LinearOpMode {
                 rightBackWheel.setPower(power);
             }
         }
+*/
         drive(-.2*FORWARDSFACTOR, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         while( colorSensorOnBottom.alpha() < 3){
             telemetry.addData("Alpha", colorSensorOnBottom.alpha());
