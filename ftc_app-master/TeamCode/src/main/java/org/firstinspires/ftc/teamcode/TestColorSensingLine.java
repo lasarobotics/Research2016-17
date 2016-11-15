@@ -6,6 +6,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -16,6 +17,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import java.util.Arrays;
 
 @Autonomous(name="Color Sensors", group="Autonomous")
+@Disabled
 public class TestColorSensingLine extends LinearOpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
@@ -107,8 +109,8 @@ public class TestColorSensingLine extends LinearOpMode {
 /*
         drive(-.2, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(500);
-        leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
-        rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
+        leftButtonPusher.setPosition(LEFT_SERVO_ON_VALUE);
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
         while( colorSensorOnBottom.alpha() < 4) {
         }
         drive(0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
@@ -116,13 +118,13 @@ public class TestColorSensingLine extends LinearOpMode {
         telemetry.addData("Red Value, Second Beacon", colorSensorOnSide.red());
         telemetry.update();
         if(colorSensorOnSide.red() > 3){
-            rightButtonPusher.setPosition(RIGHTSERVOMAXVALUE);
+            rightButtonPusher.setPosition(RIGHT_SERVO_ON_VALUE);
         } else {
-            leftButtonPusher.setPosition(LEFTSERVOMINVALUE);
+            leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
         }
         sleep(500);
-        leftButtonPusher.setPosition(LEFTSERVOMINVALUE);
-        rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
+        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
 */
 
     }

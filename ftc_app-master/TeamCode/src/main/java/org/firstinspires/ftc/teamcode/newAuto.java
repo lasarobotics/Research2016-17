@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,8 +18,8 @@ import java.util.Arrays;
  * Created by Ethan Schaffer on 11/8/2016.
  */
 
+@Autonomous(name="Auto!", group="Autonomous")
 public class newAuto extends LinearOpMode {
-    //GOOD VALUES
     public static final String LEFT1NAME = "l1"; //LX Port 2
     public static final String LEFT2NAME = "l2"; //LX Port 1
     public static final String RIGHT1NAME = "r1";//0A Port 1
@@ -33,6 +34,7 @@ public class newAuto extends LinearOpMode {
     public static final String RANGENAME = "r"; //Port 0
     public static final String COLORSIDENAME = "cs"; //Port 1
     public static final String COLORBOTTOMNAME = "cb";//Port 2
+
     public static final double LEFT_SERVO_OFF_VALUE = .75;
     public static final double LEFT_SERVO_ON_VALUE = .08;
     public static final double RIGHT_SERVO_ON_VALUE = .94;
@@ -40,13 +42,15 @@ public class newAuto extends LinearOpMode {
     public static final double BALLBLOCKOPEN = 0;
     public static final double BALLBLOCKCLOSED = 1;
 
-    public static final double POWER1 = .5, DISTANCE1 = 1500;
-    public static final double POWER2 = .2, DISTANCE2 = -300;
-    public static final double POWER3 = .25, DISTANCE3 = 300;
-    public static final double POWER4 = .35, DISTANCE4 = 1500;
-    public static final double POWER5 = .2, CM_FROM_WALL_VALUE = 12;
-    public static final double POWER6 = -.2, COLOR_READING_FOR_LINE = 4;
-    public static final double POWER7 = .2;
+    public static final double POWER1 = -.5, DISTANCE1 = 1900, DISTANCE1PART2 = 1000;           //Distance Forwards before shot
+
+    public static final long SHOTTIMEINMILLISECONDS = 4500;              //How long we shoot the ball
+    public static final double POWER2 = .2, DISTANCE2 = 500;             //Backup Distance
+    public static final double POWER3 = .5, DISTANCE3 = 1500;            //Strafe Distance
+    public static final double POWER4 = -.35, DISTANCE4 = 2500;           //Distance Forwards to get to strafing position
+    public static final double POWER5 = .45, CM_FROM_WALL_VALUE = 12;     //Strafe to between the white lines.
+    public static final double POWER6 = -.2, COLOR_READING_FOR_LINE = 4; //Forwards to Beacon #2
+    public static final double POWER7 = .2;                              //Backwards to beacon #1
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
@@ -54,7 +58,6 @@ public class newAuto extends LinearOpMode {
     ModernRoboticsI2cRangeSensor range;
     ModernRoboticsI2cGyro gyroSensor;
 
-    //Runs op mode
     @Override
     public void runOpMode() throws InterruptedException {
         leftFrontWheel= hardwareMap.dcMotor.get(LEFT1NAME);
@@ -63,16 +66,17 @@ public class newAuto extends LinearOpMode {
         rightBackWheel= hardwareMap.dcMotor.get(RIGHT2NAME);
         leftFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+
         shoot1=hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot2=hardwareMap.dcMotor.get(SHOOT2NAME);
         infeed=hardwareMap.dcMotor.get(INFEEDNAME);
         infeed.setDirection(DcMotorSimple.Direction.REVERSE);
+
         ballBlock=hardwareMap.servo.get(BALLBLOCKNAME);
-        leftButtonPusher =hardwareMap.servo.get(LEFTPUSHNAME);
-        rightButtonPusher =hardwareMap.servo.get(RIGHTPUSHNAME);
-        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
-        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+        leftButtonPusher = hardwareMap.servo.get(LEFTPUSHNAME);
+        rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
+
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
         colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
@@ -88,6 +92,10 @@ public class newAuto extends LinearOpMode {
         telemetry.addData("raw ultrasonic", range.rawUltrasonic());
         telemetry.update();
 
+        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+        ballBlock.setPosition(BALLBLOCKCLOSED);
+
         waitForStart();
         resetEncoder(leftFrontWheel);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE1) {
@@ -95,47 +103,62 @@ public class newAuto extends LinearOpMode {
         }
         stopMotors();
 
+        ballBlock.setPosition(BALLBLOCKOPEN);
+        sleep(50);
         shoot1.setPower(1);
         shoot2.setPower(1);
+        sleep(100);
         infeed.setPower(1);
-        ballBlock.setPosition(BALLBLOCKOPEN);
-        sleep(2500);
+        sleep(SHOTTIMEINMILLISECONDS);
         infeed.setPower(0);
         shoot1.setPower(0);
         shoot2.setPower(0);
         ballBlock.setPosition(BALLBLOCKCLOSED);
 
         resetEncoder(leftFrontWheel);
-        while(Math.abs(leftFrontWheel.getCurrentPosition()) > DISTANCE2) {
+        sleep(50);
+        while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE1PART2) {
+            arcade(POWER1, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        }
+        stopMotors();
+/*
+
+        resetEncoder(leftFrontWheel);
+        sleep(50);
+        while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE2) {
             arcade(POWER2, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
         stopMotors();
 
         resetEncoder(leftFrontWheel);
+        sleep(50);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE3) {
             arcade(0, POWER3, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
         stopMotors();
 
         resetEncoder(leftFrontWheel);
+        sleep(50);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE4) {
             arcade(POWER4, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
         stopMotors();
 
+        sleep(50);
         while(range.getDistance(DistanceUnit.CM) > CM_FROM_WALL_VALUE) {
             arcade(0, POWER5, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
         stopMotors();
 
+        sleep(50);
         while(colorSensorOnBottom.alpha() < 4) {
             arcade(POWER6, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
         stopMotors();
 
-        sleep(500);
+        sleep(100);
         handleColor();
-        sleep(500);
+        sleep(100);
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
 
@@ -144,15 +167,15 @@ public class newAuto extends LinearOpMode {
         }
         stopMotors();
 
-        sleep(500);
+        sleep(100);
         handleColor();
-        sleep(500);
+        sleep(100);
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
-
+*/
     }
 
-    public void handleColor(){
+    public void handleColor() {
         if(colorSensorOnSide.blue() > colorSensorOnSide.red()){
             rightButtonPusher.setPosition(RIGHT_SERVO_ON_VALUE);
             leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
@@ -161,17 +184,21 @@ public class newAuto extends LinearOpMode {
             leftButtonPusher.setPosition(LEFT_SERVO_ON_VALUE);
         }
     }
+
     public static void resetEncoder(DcMotor m){
         m.setMode(DcMotor.RunMode.RESET_ENCODERS);
         while(m.getCurrentPosition()!=0){
         }//wait
+        m.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
     public void stopMotors(){
         leftFrontWheel.setPower(0);
         leftBackWheel.setPower(0);
         rightFrontWheel.setPower(0);
         rightBackWheel.setPower(0);
     }
+
     public static void arcade(double y, double x, double c, DcMotor leftFront, DcMotor rightFront, DcMotor leftBack, DcMotor rightBack) {
         double leftFrontVal = y + x + c;
         double rightFrontVal = y - x - c;

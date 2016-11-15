@@ -23,31 +23,42 @@ public class TeleOpFinal extends OpMode {
     //TWEAKING VALUES
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
-    public static final double LEFTSERVOMAXVALUE = .75;
-    public static final double LEFTSERVOMINVALUE = .08;
-    public static final double RIGHTSERVOMAXVALUE = .94;
-    public static final double RIGHTSERVOMINVALUE = .25;
+    public static final double LEFT_SERVO_OFF_VALUE = .25;
+    public static final double LEFT_SERVO_ON_VALUE = .94;
+    public static final double RIGHT_SERVO_ON_VALUE = 1;
+    public static final double RIGHT_SERVO_OFF_VALUE = 0;
 
-    public static final double SERVOINCREMENTVALUE = .02;
     public static final double MAXINFEEDPOWER = 1;
     public static final double MAXOUTFEEDPOWER = -1;
-    public static final double INFEEDOFFPOWER = 0;
-    public static final double INFEEDTHRESHOLD = 0;
 
     //GOOD VALUES
-    public enum GOING {
+    public enum INFEEDSTATE {
         IN, OUT, NOTGOING
     }
-    public GOING SHOOTERSTATUS = GOING.NOTGOING;
-    public boolean RECENTLEFTBUMPERVALUE = false;
-    public boolean RECENTRIGHTBUMPERVALUE = false;
+    public enum SHOOTERSTATE {
+        SHOOTING, BACK, NOTSHOOTING
+    }
+    public enum SERVOSTATE {
+        ON, OFF
+    }
+    public INFEEDSTATE INFEEDSTATUS = INFEEDSTATE.NOTGOING;
+    public SHOOTERSTATE SHOOTERSTATUS = SHOOTERSTATE.NOTSHOOTING;
+    public SERVOSTATE RIGHTSERVOSTATE = SERVOSTATE.OFF;
+    public SERVOSTATE LEFTSERVOSTATE = SERVOSTATE.OFF;
+
+    public boolean RECENT_A_BUTTON = false;
+    public boolean RECENT_Y_BUTTON = false;
+    public boolean RECENT_X_BUTTON = false;
+    public boolean RECENT_B_BUTTON = false;
+    public boolean RECENT_LB = false;
+    public boolean RECENT_RB = false;
+
+    public boolean RECENT_TRIGGER = false;
+
     public static final double SLOWDOWNVALUE = 5;
     public static final double TRIGGERTHRESHOLD = .2;
     public static final double ACCEPTINPUTTHRESHOLD = .15;
     public static final double SHOOTERMAXVALUE = 1;
-    public static final double SHOOTERMINVALUE = 0;
-    public static final double SHOOTERTHRESHOLD = .2;
-    public static final double SHOOTERLOWERRATE = 1.75;
 
     public static final String LEFT1NAME = "l1"; //LX Port 2
     public static final String LEFT2NAME = "l2"; //LX Port 1
@@ -77,39 +88,35 @@ public class TeleOpFinal extends OpMode {
         rightBackWheel = hardwareMap.dcMotor.get(RIGHT2NAME);
         rightFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+
         shoot1 = hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot2 = hardwareMap.dcMotor.get(SHOOT2NAME);
+
         infeed = hardwareMap.dcMotor.get(INFEEDNAME);
-        infeed.setDirection(DcMotorSimple.Direction.REVERSE);
-        ballBlock = hardwareMap.servo.get(BALLBLOCKNAME);
+//        infeed.setDirection(DcMotorSimple.Direction.REVERSE); // At Kieran's Request
+
         leftButtonPusher = hardwareMap.servo.get(LEFTPUSHNAME);
         rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
-        leftButtonPusher.setPosition(LEFTSERVOMAXVALUE);
-        rightButtonPusher.setPosition(RIGHTSERVOMINVALUE);
+        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+
+//        ballBlock = hardwareMap.servo.get(BALLBLOCKNAME);
+
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
-        colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
         colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
         colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
         colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
+        colorSensorOnBottom.enableLed(true);
+
+        colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
         colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
-        colorSensorOnBottom.enableLed(true);
         colorSensorOnSide.enableLed(false);
     }
 
     @Override
     public void loop() {
-
-        /*
-          _        __              _
-         (_)      / _|            | |
-          _ _ __ | |_ ___  ___  __| |
-         | | '_ \|  _/ _ \/ _ \/ _` |
-         | | | | | ||  __/  __/ (_| |
-         |_|_| |_|_| \___|\___|\__,_|
-        */
-        infeed.setPower(Math.abs(gamepad2.left_stick_y) > INFEEDTHRESHOLD ? gamepad2.left_stick_y : 0);
 
         /*
               _                 _
@@ -119,31 +126,48 @@ public class TeleOpFinal extends OpMode {
          \__ \ | | | (_) | (_) | |_
          |___/_| |_|\___/ \___/ \__|
         */
-
-        if(RECENTLEFTBUMPERVALUE && !gamepad2.left_bumper){
-            SHOOTERSTATUS =(SHOOTERSTATUS == GOING.IN) ? GOING.NOTGOING : GOING.IN;
-        } else if (RECENTRIGHTBUMPERVALUE && !gamepad2.right_bumper){
-            SHOOTERSTATUS =(SHOOTERSTATUS == GOING.OUT) ? GOING.NOTGOING : GOING.OUT;
+        if(RECENT_LB && !gamepad2.left_bumper){
+            SHOOTERSTATUS =(SHOOTERSTATUS == SHOOTERSTATE.SHOOTING) ? SHOOTERSTATE.NOTSHOOTING : SHOOTERSTATE.SHOOTING;
+        } else if (RECENT_RB && !gamepad2.right_bumper){
+            SHOOTERSTATUS =(SHOOTERSTATUS == SHOOTERSTATE.BACK) ? SHOOTERSTATE.NOTSHOOTING : SHOOTERSTATE.BACK;
         }
-        //Ternary Operations used to toggle INFEEDSTATUS
+        //Ternary Operations used to toggle SHOOTERSTATUS
         switch(SHOOTERSTATUS){
-            case IN:
-                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
+            case SHOOTING:
                 shoot1.setPower(SHOOTERMAXVALUE);
                 shoot2.setPower(SHOOTERMAXVALUE);
+//                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
                 break;
-            case OUT:
-                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
+            case BACK:
                 shoot1.setPower(-SHOOTERMAXVALUE);
                 shoot2.setPower(-SHOOTERMAXVALUE);
+//                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
                 break;
             default:
-                ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE);
                 shoot1.setPower(0);
                 shoot2.setPower(0);
+//                ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE);
         }
-        RECENTLEFTBUMPERVALUE = gamepad2.left_bumper;
-        RECENTRIGHTBUMPERVALUE = gamepad2.right_bumper;
+        RECENT_LB = gamepad2.left_bumper;
+        RECENT_RB = gamepad2.right_bumper;
+        /*
+          _        __              _
+         (_)      / _|            | |
+          _ _ __ | |_ ___  ___  __| |
+         | | '_ \|  _/ _ \/ _ \/ _` |
+         | | | | | ||  __/  __/ (_| |
+         |_|_| |_|_| \___|\___|\__,_|
+        */
+
+        double power = Math.abs(gamepad2.left_stick_y) > ACCEPTINPUTTHRESHOLD ? gamepad2.left_stick_y : 0;
+        double modifier = Math.abs(gamepad2.right_stick_y) > ACCEPTINPUTTHRESHOLD ? 1.1-Math.abs(gamepad2.right_stick_y) : 1;
+        if(power*modifier > MAXINFEEDPOWER){
+            infeed.setPower(MAXINFEEDPOWER);
+        } else if(power*modifier < MAXOUTFEEDPOWER){
+            infeed.setPower(MAXOUTFEEDPOWER);
+        } else {
+            infeed.setPower(power*modifier);
+        }
 
         /*
               _      _
@@ -174,8 +198,33 @@ public class TeleOpFinal extends OpMode {
          \__ \  __/ |   \ V / (_) |
          |___/\___|_|    \_/ \___/
          */
-        setServo(leftButtonPusher, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFTSERVOMAXVALUE, LEFTSERVOMINVALUE);
-        setServo(rightButtonPusher, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHTSERVOMAXVALUE, RIGHTSERVOMINVALUE);
+
+        if(RECENT_X_BUTTON && !gamepad2.x){
+            RIGHTSERVOSTATE = (RIGHTSERVOSTATE == SERVOSTATE.OFF ? SERVOSTATE.ON : SERVOSTATE.OFF);
+        }
+        switch (RIGHTSERVOSTATE){
+            case ON:
+                rightButtonPusher.setPosition(RIGHT_SERVO_ON_VALUE);
+                break;
+            case OFF:
+                rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+        }
+        RECENT_X_BUTTON = gamepad2.x;
+
+        if(RECENT_B_BUTTON && !gamepad2.b){
+            LEFTSERVOSTATE = (LEFTSERVOSTATE == SERVOSTATE.OFF ? SERVOSTATE.ON : SERVOSTATE.OFF);
+        }
+        switch (LEFTSERVOSTATE){
+            case ON:
+                leftButtonPusher.setPosition(LEFT_SERVO_ON_VALUE);
+                break;
+            case OFF:
+                leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        }
+        RECENT_B_BUTTON = gamepad2.b;
+
+//        setServo(leftButtonPusher, gamepad2.a, gamepad2.y, SERVOINCREMENTVALUE, LEFT_SERVO_ON_VALUE, LEFT_SERVO_ON_VALUE);
+//        setServo(rightButtonPusher, gamepad2.x, gamepad2.b, SERVOINCREMENTVALUE, RIGHT_SERVO_ON_VALUE, RIGHT_SERVO_OFF_VALUE);
 
 
 
@@ -189,16 +238,21 @@ public class TeleOpFinal extends OpMode {
                                                   __/ |
                                                  |___/
         */
-        telemetry.addData("leftServo", leftButtonPusher.getPosition());
-        telemetry.addData("rightServo", rightButtonPusher.getPosition());
-        telemetry.addData("Controller LeftY", gamepad1.left_stick_y);
-        telemetry.addData("Controller LeftX", gamepad1.left_stick_x);
-        telemetry.addData("Controller RightY", gamepad1.right_stick_y);
-        telemetry.addData("Infeed", SHOOTERSTATUS == GOING.IN ? "Forwards" : SHOOTERSTATUS == GOING.OUT ? "Backwards" : "None");
+//        telemetry.addData("LeftY / Y Power", gamepad1.left_stick_y + " / " + inputY);/
+//        telemetry.addData("LeftX / X Power", gamepad1.left_stick_x + " / " + inputX);
+//        telemetry.addData("RightY / Rot Power", gamepad1.right_stick_y + " / " + inputC);
+        telemetry.addData("LF", leftFrontWheel.getPower());
+        telemetry.addData("LB", leftBackWheel.getPower());
+        telemetry.addData("RF", rightFrontWheel.getPower());
+        telemetry.addData("RB", rightBackWheel.getPower());
+
+        telemetry.addData("Infeed", infeed.getPower() > .1 ? "IN" : infeed.getPower() < -.1 ? "OUT" : "OFF");
+        telemetry.addData("Shooter", SHOOTERSTATUS == SHOOTERSTATE.SHOOTING ? "Shooting" : "Not Shooting");
+        telemetry.addData("Right Servo", RIGHTSERVOSTATE == SERVOSTATE.ON ? "On" : "Off");
+        telemetry.addData("Left Servo", LEFTSERVOSTATE == SERVOSTATE.ON ? "On" : "Off");
         //Ternary, basically it just outputs the Infeed state.
+
         telemetry.update();
-        //Servos can be set to go between 1 and 0, and will be incremented by 2% of their range each cycle.
-        //Pressing the 'a', 'b','x', or 'y' button will increment the servo.
 
 
     }
