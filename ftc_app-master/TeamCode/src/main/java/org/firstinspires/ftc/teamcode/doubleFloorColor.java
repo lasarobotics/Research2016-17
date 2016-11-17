@@ -18,8 +18,8 @@ import java.util.Arrays;
  * Created by Ethan Schaffer on 11/8/2016.
  */
 
-@Autonomous(name="Auto!", group="Autonomous")
-public class newAuto extends LinearOpMode {
+@Autonomous(name="Auto (2 Color)", group="Autonomous")
+public class doubleFloorColor extends LinearOpMode {
     public static final String LEFT1NAME = "l1"; //LX Port 2
     public static final String LEFT2NAME = "l2"; //LX Port 1
     public static final String RIGHT1NAME = "r1";//0A Port 1
@@ -33,7 +33,8 @@ public class newAuto extends LinearOpMode {
     public static final String RIGHTPUSHNAME = "rp";//MO Port 2
     public static final String RANGENAME = "r"; //Port 0
     public static final String COLORSIDENAME = "cs"; //Port 1
-    public static final String COLORBOTTOMNAME = "cb";//Port 2
+    public static final String COLORLEFTBOTTOMNAME = "cb";//Port 2
+    public static final String COLORRIGHTBOTTOMNAME = "cb2"; //Port 4
 
     public static final double LEFT_SERVO_OFF_VALUE = 0;
     public static final double LEFT_SERVO_ON_VALUE = 1;
@@ -41,9 +42,6 @@ public class newAuto extends LinearOpMode {
     public static final double RIGHT_SERVO_OFF_VALUE = 0;
     public static final double BALLBLOCKOPEN = 0;
     public static final double BALLBLOCKCLOSED = 1;
-
-
-//UPDATE THIS
 
 
     //TODO: make a pretty 'map'
@@ -74,7 +72,7 @@ public class newAuto extends LinearOpMode {
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
-    ColorSensor colorSensorOnBottom, colorSensorOnSide;
+    ColorSensor colorSensorLeftBottom, colorSensorRightBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
     ModernRoboticsI2cGyro gyroSensor;
 
@@ -98,10 +96,12 @@ public class newAuto extends LinearOpMode {
         rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
 
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
-        colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
+        colorSensorLeftBottom = hardwareMap.colorSensor.get(COLORLEFTBOTTOMNAME);
+        colorSensorRightBottom = hardwareMap.colorSensor.get(COLORRIGHTBOTTOMNAME);
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
-        colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
+        colorSensorLeftBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
         colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
+        colorSensorRightBottom.setI2cAddress(I2cAddr.create8bit(0x2c));
         gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, GYRONAME);
         gyroSensor.calibrate();
         while(gyroSensor.isCalibrating()){
@@ -208,10 +208,17 @@ public class newAuto extends LinearOpMode {
         }
         stopMotors();
 
-
+/*
+  /\ /\  __          ______  _____  _  __ _____   /\ /\
+ |/\|/\| \ \        / / __ \|  __ \| |/ // ____| |/\|/\|
+          \ \  /\  / / |  | | |__) | ' /| (___
+           \ \/  \/ /| |  | |  _  /|  <  \___ \
+            \  /\  / | |__| | | \ \| . \ ____) |
+             \/  \/   \____/|_|  \_\_|\_\_____/
+*/
         //backwards to back color sensor
         sleep(50);
-        while(colorSensorOnBottom.alpha() < 4) {
+        while(colorSensorLeftBottom.alpha() < 4) {
             arcade(POWER7, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
         }
@@ -241,7 +248,7 @@ public class newAuto extends LinearOpMode {
         arcade(POWER8, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         sleep(500);
         ///forwards to front color sensor
-        while(colorSensorOnBottom.alpha() < COLOR_READING_FOR_LINE) {
+        while(colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE) {
             arcade(POWER8, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
         }
@@ -287,7 +294,7 @@ public class newAuto extends LinearOpMode {
     }
 
     public void handleColor(double power) {
-        while(colorSensorOnBottom.alpha() < 4) {
+        while(colorSensorLeftBottom.alpha() < 4) {
             arcade(power, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
         stopMotors();
