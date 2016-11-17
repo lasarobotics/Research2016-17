@@ -3,11 +3,11 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -19,9 +19,8 @@ import java.util.Arrays;
  * Created by Ethan Schaffer on 11/8/2016.
  */
 
-@Autonomous(name="Auto (2 Color)", group="Autonomous")
-@Disabled
-public class doubleFloorColor extends LinearOpMode {
+@Autonomous(name="Auto P Loop", group="Autonomous")
+public class withPLoop extends LinearOpMode {
     public static final String LEFT1NAME = "l1"; //LX Port 2
     public static final String LEFT2NAME = "l2"; //LX Port 1
     public static final String RIGHT1NAME = "r1";//0A Port 1
@@ -50,7 +49,7 @@ public class doubleFloorColor extends LinearOpMode {
 
     // Shoot
     public static final double POWER1 = -.5, DISTANCE1 = 1900;           //Distance Forwards before shot
-    public static final long SHOTTIMEINMILLISECONDS = 1000;              //How long we shoot the ball
+    public static final long SHOTTIMEINMILLISECONDS = 500;              //How long we shoot the ball
 //    public static final long SHOTTIMEINMILLISECONDS = 4500;              //How long we shoot the ball
 
     //Line up with wall
@@ -65,19 +64,20 @@ public class doubleFloorColor extends LinearOpMode {
 
     //Getting Beacons
     public static final double POWER7 = .25, COLOR_READING_FOR_LINE = 4; //Backwards to beacon #1
-    public static final double POWER8 = -.25; //Forwards to Beacon #2
+    public static final double POWER_HANDLE_COLOR = .15;
+    public static final double POWER8 = -.25, DISTANCE8 = 250; //Forwards to Beacon #2
 
     //Cap Ball
     public static  final double POWER9 = .2, GYRO9 = 45; //ReOrient for Hitting Cap Ball
     public static final double POWER10 = .5, DISTANCE10 = 2750; //Distance to Ball
-    public static final double POWER_HANDLE_COLOR = .2;
+    public static final long TIME_WAIT_SMALL = 50, TIME_WAIT_MEDIUM = 500, TIME_WAIT_LARGE = 1000;
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
     Servo leftButtonPusher, rightButtonPusher, ballBlock;
     ColorSensor colorSensorLeftBottom, colorSensorRightBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
     ModernRoboticsI2cGyro gyroSensor;
-
+    DeviceInterfaceModule dim;
     @Override
     public void runOpMode() throws InterruptedException {
         leftFrontWheel= hardwareMap.dcMotor.get(LEFT1NAME);
@@ -105,6 +105,7 @@ public class doubleFloorColor extends LinearOpMode {
         colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
         colorSensorRightBottom.setI2cAddress(I2cAddr.create8bit(0x2c));
         gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, GYRONAME);
+        dim = hardwareMap.get(DeviceInterfaceModule.class, "Device Interface Module 1");
         gyroSensor.calibrate();
         while(gyroSensor.isCalibrating()){
             telemetry.addData("Gyro", "Calibrating...");
@@ -128,10 +129,10 @@ public class doubleFloorColor extends LinearOpMode {
         stopMotors();
 
         ballBlock.setPosition(BALLBLOCKOPEN);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         shoot1.setPower(1);
         shoot2.setPower(1);
-        sleep(100);
+        sleep(TIME_WAIT_SMALL*2);
         infeed.setPower(1);
         sleep(SHOTTIMEINMILLISECONDS);
         infeed.setPower(0);
@@ -141,7 +142,7 @@ public class doubleFloorColor extends LinearOpMode {
 
 /*
         resetEncoder(leftFrontWheel);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE1PART2) {
             arcade(POWER1, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
         }
@@ -150,7 +151,7 @@ public class doubleFloorColor extends LinearOpMode {
 
         //Back Up
         resetEncoder(leftFrontWheel);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE2) {
             arcade(POWER2, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
@@ -166,7 +167,7 @@ public class doubleFloorColor extends LinearOpMode {
 
         //Forwards
         resetEncoder(leftFrontWheel);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE4) {
             arcade(POWER4, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
@@ -185,7 +186,7 @@ public class doubleFloorColor extends LinearOpMode {
 
         //strafe to wall
 
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(range.getDistance(DistanceUnit.CM) > CM_FROM_WALL_VALUE) {
             telemetry.addData("Dist", range.getDistance(DistanceUnit.CM));
             telemetry.addData("D Targ", CM_FROM_WALL_VALUE);
@@ -196,14 +197,14 @@ public class doubleFloorColor extends LinearOpMode {
         stopMotors();
 
         resetEncoder(leftFrontWheel);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE6) {
             arcade(0, POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
         }
         stopMotors();
         resetEncoder(leftFrontWheel);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < 2* DISTANCE6) {
             arcade(0, -POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
@@ -219,60 +220,84 @@ public class doubleFloorColor extends LinearOpMode {
              \/  \/   \____/|_|  \_\_|\_\_____/
 */
         //backwards to back color sensor
-        sleep(50);
-        while(colorSensorLeftBottom.alpha() < 4) {
-            arcade(POWER7, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+        sleep(TIME_WAIT_SMALL);
+        while(colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
+            double lPower = POWER7-(gyroSensor.getIntegratedZValue()/100);
+            double rPower = POWER7+(gyroSensor.getIntegratedZValue()/100);
+            leftBackWheel.setPower(lPower);
+            leftFrontWheel.setPower(lPower);
+            rightBackWheel.setPower(rPower);
+            rightFrontWheel.setPower(rPower);
+            telemetry.addData("Gyro", gyroSensor.getIntegratedZValue());
             idle();
         }
         stopMotors();
 
-        sleep(100);
-        //press buttons
-/*
-        while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE6) {
-            arcade(0, POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-            idle();
-        }
-        stopMotors();
-        resetEncoder(leftFrontWheel);
-        sleep(50);
-        while(Math.abs(leftFrontWheel.getCurrentPosition()) < 2* DISTANCE6) {
-            arcade(0, -POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-            idle();
-        }
-        stopMotors();
-*/
-        handleColor(-POWER_HANDLE_COLOR);
-        sleep(100);
+        sleep(TIME_WAIT_SMALL);
+        handleColor();
+        sleep(TIME_WAIT_LARGE);
+
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        dim.setLED(0, false);
+        dim.setLED(1, false);
 
-        arcade(POWER8, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-        sleep(500);
-        ///forwards to front color sensor
-        while(colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE) {
+        resetEncoder(leftFrontWheel);
+        sleep(TIME_WAIT_SMALL);
+
+        while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE8) {
             arcade(POWER8, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
         }
+        sleep(500);
+        ///forwards to front color sensor
+        while(colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
+            double lPower = POWER8 + (gyroSensor.getIntegratedZValue()/100);
+            double rPower = POWER8 - (gyroSensor.getIntegratedZValue()/100);
+            leftBackWheel.setPower(lPower);
+            leftFrontWheel.setPower(lPower);
+            rightBackWheel.setPower(rPower);
+            rightFrontWheel.setPower(rPower);
+            telemetry.addData("Gyro", gyroSensor.getIntegratedZValue());
+            idle();
+        }
         stopMotors();
+        sleep(TIME_WAIT_SMALL);
+        handleColor();
+        sleep(TIME_WAIT_LARGE);
 
-        sleep(100);
-        //press buttons
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        dim.setLED(0, false);
+        dim.setLED(1, false);
+
+        sleep(TIME_WAIT_MEDIUM);
+
+        /*
+           _____
+          / ____|
+         | |     __ _ _ __
+         | |    / _` | '_ \
+         | |___| (_| | |_) |
+          \_____\__,_| .__/
+                     | |
+                     |_|
+        */
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE6) {
             arcade(0, POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
         }
         stopMotors();
         resetEncoder(leftFrontWheel);
-        sleep(50);
-        while(Math.abs(leftFrontWheel.getCurrentPosition()) < 2* DISTANCE6) {
+        sleep(TIME_WAIT_SMALL);
+        while(Math.abs(leftFrontWheel.getCurrentPosition()) < 2*DISTANCE6) {
             arcade(0, -POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
         }
         stopMotors();
 
-        handleColor(POWER_HANDLE_COLOR);
-        sleep(100);
+        handleColor();
+        sleep(TIME_WAIT_LARGE);
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
 
@@ -285,7 +310,7 @@ public class doubleFloorColor extends LinearOpMode {
 
         //Back Up
         resetEncoder(leftFrontWheel);
-        sleep(50);
+        sleep(TIME_WAIT_SMALL);
         while(Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE10) {
             arcade(POWER10, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
             idle();
@@ -295,12 +320,18 @@ public class doubleFloorColor extends LinearOpMode {
 
     }
 
-    public void handleColor(double power) {
-        while(colorSensorLeftBottom.alpha() < 4) {
-            arcade(power, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
+    public void handleColor() {
+        dim.setLED(0, true);
+        dim.setLED(1, true);
+        while (!((colorSensorRightBottom.alpha() > COLOR_READING_FOR_LINE) && (colorSensorLeftBottom.alpha() > COLOR_READING_FOR_LINE) )){
+            if(colorSensorLeftBottom.alpha()>COLOR_READING_FOR_LINE){
+                rightFrontWheel.setPower(-POWER_HANDLE_COLOR);
+                rightBackWheel.setPower(-POWER_HANDLE_COLOR);
+            } else {
+                leftFrontWheel.setPower(-POWER_HANDLE_COLOR);
+                leftBackWheel.setPower(-POWER_HANDLE_COLOR);
+            }
         }
-        stopMotors();
-
         if(colorSensorOnSide.blue() > colorSensorOnSide.red()){
             rightButtonPusher.setPosition(RIGHT_SERVO_ON_VALUE);
             leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
