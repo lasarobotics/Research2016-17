@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,14 +12,13 @@ import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.internal.opengl.shaders.CubeMeshFragmentShader;
 
 import java.util.Arrays;
 
 import static java.lang.Thread.sleep;
 
 /**
- * Created by Ethan Schaffer on 11/8/2016.
+ * Created by Ethan Schaffer on 11/17/2016.
  */
 
 @Autonomous(name="State Machine", group="Autonomous")
@@ -32,10 +30,12 @@ public class stateMachine extends OpMode {
     public static final String SHOOT1NAME = "sh1";//PN Port 1
     public static final String SHOOT2NAME = "sh2";//PN Port 2
     public static final String INFEEDNAME = "in"; //2S Port 2
-    public static final String GYRONAME = "g"; //Port 4
-    public static final String BALLBLOCKNAME = "b";//MO Port 3
+    public static final String BALLBLOCKLEFTNAME = "bl", BALLBLOCKRIGHTNAME = "br"; //MO Ports 3+4
+    public static final double BALLBLOCKLEFTOPEN = 0, BALLBLOCKLEFTCLOSED = 1;
+    public static final double BALLBLOCKRIGHTOPEN = 1, BALLBLOCKRIGHTCLOSED = 1;
     public static final String LEFTPUSHNAME = "lp";//MO Port 1
     public static final String RIGHTPUSHNAME = "rp";//MO Port 2
+    public static final String GYRONAME = "g"; //Port 4
     public static final String RANGENAME = "r"; //Port 0
     public static final String COLORSIDENAME = "cs"; //Port 1
     public static final String COLORLEFTBOTTOMNAME = "cb";//Port 2
@@ -45,8 +45,6 @@ public class stateMachine extends OpMode {
     public static final double LEFT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_OFF_VALUE = 0;
-    public static final double BALLBLOCKOPEN = 0;
-    public static final double BALLBLOCKCLOSED = 1;
 
 
     //TODO: make a pretty 'map'
@@ -80,7 +78,7 @@ public class stateMachine extends OpMode {
     public static final long TIME_WAIT_SMALL = 50, TIME_WAIT_MEDIUM = 500, TIME_WAIT_LARGE = 1000;
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
-    Servo leftButtonPusher, rightButtonPusher, ballBlock;
+    Servo leftButtonPusher, rightButtonPusher, ballBlockRight, ballBlockLeft;
     ColorSensor colorSensorLeftBottom, colorSensorRightBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
     ModernRoboticsI2cGyro gyroSensor;
@@ -101,7 +99,8 @@ public class stateMachine extends OpMode {
         infeed = hardwareMap.dcMotor.get(INFEEDNAME);
         infeed.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        ballBlock = hardwareMap.servo.get(BALLBLOCKNAME);
+        ballBlockRight = hardwareMap.servo.get(BALLBLOCKRIGHTNAME);
+        ballBlockLeft = hardwareMap.servo.get(BALLBLOCKLEFTNAME);
         leftButtonPusher = hardwareMap.servo.get(LEFTPUSHNAME);
         rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
 
@@ -125,7 +124,9 @@ public class stateMachine extends OpMode {
 
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
-        ballBlock.setPosition(BALLBLOCKCLOSED);
+        ballBlockRight.setPosition(BALLBLOCKRIGHTCLOSED);
+        ballBlockLeft.setPosition(BALLBLOCKLEFTCLOSED);
+
         CurrentState = state.ForwardsToShoot;
     }
 
@@ -151,17 +152,19 @@ public class stateMachine extends OpMode {
 
             case Shooting:
                 RecentState = state.Shooting;
-                ballBlock.setPosition(BALLBLOCKOPEN);
+                ballBlockRight.setPosition(BALLBLOCKRIGHTOPEN);
+                ballBlockLeft.setPosition(BALLBLOCKLEFTOPEN);
                 waitForMS(TIME_WAIT_SMALL);
                 shoot1.setPower(1);
                 shoot2.setPower(1);
-                waitForMS(TIME_WAIT_SMALL * 2);
+                waitForMS(TIME_WAIT_MEDIUM);
                 infeed.setPower(1);
                 waitForMS(SHOTTIMEINMILLISECONDS);
                 infeed.setPower(0);
                 shoot1.setPower(0);
                 shoot2.setPower(0);
-                ballBlock.setPosition(BALLBLOCKCLOSED);
+                ballBlockRight.setPosition(BALLBLOCKRIGHTCLOSED);
+                ballBlockLeft.setPosition(BALLBLOCKLEFTCLOSED);
                 CurrentState = state.BackingUp;
                 break;
 
@@ -213,7 +216,7 @@ public class stateMachine extends OpMode {
                 stopMotors();
 
                 //strafe to wall
-                waitForMS(TIME_WAIT_SMALL);
+                waitForMS(TIME_WAIT_MEDIUM);
                 while (range.getDistance(DistanceUnit.CM) > CM_FROM_WALL_VALUE) {
                     telemetry.addData("Dist", range.getDistance(DistanceUnit.CM));
                     telemetry.addData("D Targ", CM_FROM_WALL_VALUE);
@@ -243,7 +246,6 @@ public class stateMachine extends OpMode {
             case GoingToBeacon1:
                 RecentState = state.GoingToBeacon1;
                 //backwards to back color sensor
-                waitForMS(TIME_WAIT_SMALL);
                 while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
                     double lPower = POWER7 - (gyroSensor.getIntegratedZValue() / 100);
                     double rPower = POWER7 + (gyroSensor.getIntegratedZValue() / 100);
@@ -280,7 +282,6 @@ public class stateMachine extends OpMode {
                 break;
             case PressingBeacon:
                 //Body
-                waitForMS(TIME_WAIT_SMALL);
                 dim.setLED(0, true);
                 dim.setLED(1, true);
                 while (!((colorSensorRightBottom.alpha() > COLOR_READING_FOR_LINE) && (colorSensorLeftBottom.alpha() > COLOR_READING_FOR_LINE))) {
@@ -338,10 +339,19 @@ public class stateMachine extends OpMode {
             default:
                 stop();
         } //Code Below this point will run on every cycle
+        waitForMS(TIME_WAIT_SMALL);
+        telemetry.clear();
         telemetry.addData("State", CurrentState);
         telemetry.addData("Recent State", RecentState);
+        telemetry.addData("Left Bottom", colorSensorLeftBottom.alpha());
+        telemetry.addData("Right Bottom", colorSensorRightBottom.alpha());
+        telemetry.addData("Side Color", colorSensorOnSide.red() > 2 || colorSensorOnSide.blue() > 2
+                ? colorSensorOnSide.red() > colorSensorOnSide.blue() ? "Blue" : "Red" : "Not Sure");
         telemetry.update();
-
+        while(!gamepad1.a){
+            //wait until gamepad1.a is pressed to go to the next step
+            waitForMS(TIME_WAIT_SMALL);
+        }
     }
 
     public static void resetEncoder(DcMotor m){

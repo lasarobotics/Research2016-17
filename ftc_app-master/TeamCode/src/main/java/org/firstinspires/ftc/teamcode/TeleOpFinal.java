@@ -3,6 +3,7 @@ ADB guide can be found at:
 https://ftcprogramming.wordpress.com/2015/11/30/building-ftc_app-wirelessly/
 */
 package org.firstinspires.ftc.teamcode;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -65,20 +67,25 @@ public class TeleOpFinal extends OpMode {
     public static final String LEFT2NAME = "l2"; //LX Port 1
     public static final String RIGHT1NAME = "r1";//0A Port 1
     public static final String RIGHT2NAME = "r2";//0A Port 2
+    public static final String BALLBLOCKLEFTNAME = "bl", BALLBLOCKRIGHTNAME = "br"; //MO Ports 3+4
+    public static final double BALLBLOCKLEFTOPEN = 0, BALLBLOCKLEFTCLOSED = 1;
+    public static final double BALLBLOCKRIGHTOPEN = 1, BALLBLOCKRIGHTCLOSED = 1;
     public static final String SHOOT1NAME = "sh1";//PN Port 1
     public static final String SHOOT2NAME = "sh2";//PN Port 2
     public static final String INFEEDNAME = "in"; //2S Port 2
-    public static final String BALLBLOCKNAME = "b";//MO Port 3
     public static final String LEFTPUSHNAME = "lp";//MO Port 1
     public static final String RIGHTPUSHNAME = "rp";//MO Port 2
     public static final String RANGENAME = "r"; //Port 0
     public static final String COLORSIDENAME = "cs"; //Port 1
-    public static final String COLORBOTTOMNAME = "cb";//Port 2
-
+    public static final String COLORLEFTBOTTOMNAME = "cb";//Port 2
+    public static final String COLORRIGHTBOTTOMNAME = "cb2"; //Port 4
+    public static final String GYRONAME = "g"; //Port 4
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
-    Servo leftButtonPusher, rightButtonPusher, ballBlock;
-    ColorSensor colorSensorOnSide, colorSensorOnBottom;
+    Servo leftButtonPusher, rightButtonPusher, ballBlockRight, ballBlockLeft;
+    ColorSensor colorSensorOnSide, colorSensorLeftBottom, colorSensorRightBottom;
+    ModernRoboticsI2cGyro gyroSensor;
+    DeviceInterfaceModule dim;
     ModernRoboticsI2cRangeSensor range;
 
     @Override
@@ -87,33 +94,43 @@ public class TeleOpFinal extends OpMode {
         leftBackWheel = hardwareMap.dcMotor.get(LEFT2NAME);
         rightFrontWheel = hardwareMap.dcMotor.get(RIGHT1NAME);
         rightBackWheel = hardwareMap.dcMotor.get(RIGHT2NAME);
-        rightFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFrontWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBackWheel.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shoot1 = hardwareMap.dcMotor.get(SHOOT1NAME);
         shoot1.setDirection(DcMotorSimple.Direction.REVERSE);
         shoot2 = hardwareMap.dcMotor.get(SHOOT2NAME);
-
         infeed = hardwareMap.dcMotor.get(INFEEDNAME);
-//        infeed.setDirection(DcMotorSimple.Direction.REVERSE); // At Kieran's Request
+        infeed.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        ballBlockRight = hardwareMap.servo.get(BALLBLOCKRIGHTNAME);
+        ballBlockLeft = hardwareMap.servo.get(BALLBLOCKLEFTNAME);
         leftButtonPusher = hardwareMap.servo.get(LEFTPUSHNAME);
         rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
-        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
-        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
-
-//        ballBlock = hardwareMap.servo.get(BALLBLOCKNAME);
 
         range = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, RANGENAME);
-        colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
-        colorSensorOnBottom = hardwareMap.colorSensor.get(COLORBOTTOMNAME);
-        colorSensorOnBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
-        colorSensorOnBottom.enableLed(true);
-
+        colorSensorLeftBottom = hardwareMap.colorSensor.get(COLORLEFTBOTTOMNAME);
+        colorSensorRightBottom = hardwareMap.colorSensor.get(COLORRIGHTBOTTOMNAME);
         colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
-        colorSensorOnSide = hardwareMap.colorSensor.get(COLORSIDENAME);
+        colorSensorLeftBottom.setI2cAddress(I2cAddr.create8bit(0x4c));
         colorSensorOnSide.setI2cAddress(I2cAddr.create8bit(0x3c));
-        colorSensorOnSide.enableLed(false);
+        colorSensorRightBottom.setI2cAddress(I2cAddr.create8bit(0x2c));
+        gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, GYRONAME);
+        dim = hardwareMap.get(DeviceInterfaceModule.class, "Device Interface Module 1");
+        gyroSensor.calibrate();
+        while (gyroSensor.isCalibrating()) {
+            telemetry.addData("Gyro", "Calibrating...");
+            telemetry.update();
+        }
+        telemetry.addData("Gyro", "Calibrated");
+        telemetry.addData("raw ultrasonic", range.rawUltrasonic());
+        telemetry.update();
+
+        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+        ballBlockRight.setPosition(BALLBLOCKRIGHTCLOSED);
+        ballBlockLeft.setPosition(BALLBLOCKLEFTCLOSED);
+
     }
 
     @Override
@@ -137,17 +154,20 @@ public class TeleOpFinal extends OpMode {
             case SHOOTING:
                 shoot1.setPower(SHOOTERMAXVALUE);
                 shoot2.setPower(SHOOTERMAXVALUE);
-//                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
+                ballBlockRight.setPosition(BALLBLOCKRIGHTOPEN);
+                ballBlockLeft.setPosition(BALLBLOCKLEFTOPEN);
                 break;
             case BACK:
                 shoot1.setPower(-SHOOTERMAXVALUE);
                 shoot2.setPower(-SHOOTERMAXVALUE);
-//                ballBlock.setPosition(BLOCKSERVOOPENVALUE);
+                ballBlockRight.setPosition(BALLBLOCKRIGHTOPEN);
+                ballBlockLeft.setPosition(BALLBLOCKLEFTOPEN);
                 break;
             default:
                 shoot1.setPower(0);
                 shoot2.setPower(0);
-//                ballBlock.setPosition(BLOCKSERVOCLOSEDVALUE);
+                ballBlockRight.setPosition(BALLBLOCKLEFTCLOSED);
+                ballBlockLeft.setPosition(BALLBLOCKRIGHTCLOSED);
         }
         RECENT_LB = gamepad2.left_bumper;
         RECENT_RB = gamepad2.right_bumper;
