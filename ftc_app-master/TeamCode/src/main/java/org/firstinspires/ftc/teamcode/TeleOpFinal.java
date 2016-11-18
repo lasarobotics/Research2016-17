@@ -27,7 +27,7 @@ public class TeleOpFinal extends OpMode {
     public static final double BLOCKSERVOOPENVALUE = 0;
     public static final double BLOCKSERVOCLOSEDVALUE = 1;
     public static final double LEFT_SERVO_OFF_VALUE = 0;
-    public static final double LEFT_SERVO_ON_VALUE = .1;
+    public static final double LEFT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_OFF_VALUE = 0;
 
@@ -117,12 +117,6 @@ public class TeleOpFinal extends OpMode {
         colorSensorRightBottom.setI2cAddress(I2cAddr.create8bit(0x2c));
         gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, GYRONAME);
         dim = hardwareMap.get(DeviceInterfaceModule.class, "Device Interface Module 1");
-        gyroSensor.calibrate();
-        while (gyroSensor.isCalibrating()) {
-            telemetry.addData("Gyro", "Calibrating...");
-            telemetry.update();
-        }
-        telemetry.addData("Gyro", "Calibrated");
         telemetry.addData("raw ultrasonic", range.rawUltrasonic());
         telemetry.update();
 
@@ -269,8 +263,8 @@ public class TeleOpFinal extends OpMode {
 
         telemetry.addData("Infeed", infeed.getPower() > .1 ? "IN" : infeed.getPower() < -.1 ? "OUT" : "OFF");
         telemetry.addData("Shooter", SHOOTERSTATUS == SHOOTERSTATE.SHOOTING ? "Shooting" : "Not Shooting");
-        telemetry.addData("Right Servo", RIGHTSERVOSTATE == SERVOSTATE.ON ? "On" : "Off");
-        telemetry.addData("Left Servo", LEFTSERVOSTATE == SERVOSTATE.ON ? "On" : "Off");
+        telemetry.addData("Right Servo", RIGHTSERVOSTATE == SERVOSTATE.ON ? "On" + rightButtonPusher.getPosition() : "Off" + rightButtonPusher.getPosition());
+        telemetry.addData("Left Servo", LEFTSERVOSTATE == SERVOSTATE.ON ? "On"+leftButtonPusher.getPosition() : "Off" + leftButtonPusher.getPosition());
         //Ternary, basically it just outputs the Infeed state.
 
         telemetry.update();

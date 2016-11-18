@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,6 +21,7 @@ import java.util.Arrays;
  */
 
 @Autonomous(name="Auto P Loop", group="Autonomous")
+@Disabled
 public class withPLoop extends LinearOpMode {
     public static final String LEFT1NAME = "l1"; //LX Port 2
     public static final String LEFT2NAME = "l2"; //LX Port 1
@@ -28,10 +30,12 @@ public class withPLoop extends LinearOpMode {
     public static final String SHOOT1NAME = "sh1";//PN Port 1
     public static final String SHOOT2NAME = "sh2";//PN Port 2
     public static final String INFEEDNAME = "in"; //2S Port 2
-    public static final String GYRONAME = "g"; //Port 4
-    public static final String BALLBLOCKNAME = "b";//MO Port 3
+    public static final String BALLBLOCKLEFTNAME = "bl", BALLBLOCKRIGHTNAME = "br"; //MO Ports 3+4
+    public static final double BALLBLOCKLEFTOPEN = 0, BALLBLOCKLEFTCLOSED = 1;
+    public static final double BALLBLOCKRIGHTOPEN = 1, BALLBLOCKRIGHTCLOSED = 1;
     public static final String LEFTPUSHNAME = "lp";//MO Port 1
     public static final String RIGHTPUSHNAME = "rp";//MO Port 2
+    public static final String GYRONAME = "g"; //Port 4
     public static final String RANGENAME = "r"; //Port 0
     public static final String COLORSIDENAME = "cs"; //Port 1
     public static final String COLORLEFTBOTTOMNAME = "cb";//Port 2
@@ -41,8 +45,6 @@ public class withPLoop extends LinearOpMode {
     public static final double LEFT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_OFF_VALUE = 0;
-    public static final double BALLBLOCKOPEN = 0;
-    public static final double BALLBLOCKCLOSED = 1;
 
 
     //TODO: make a pretty 'map'
@@ -73,7 +75,7 @@ public class withPLoop extends LinearOpMode {
     public static final long TIME_WAIT_SMALL = 50, TIME_WAIT_MEDIUM = 500, TIME_WAIT_LARGE = 1000;
 
     DcMotor leftFrontWheel, leftBackWheel, rightFrontWheel, rightBackWheel, shoot1, shoot2, infeed;
-    Servo leftButtonPusher, rightButtonPusher, ballBlock;
+    Servo leftButtonPusher, rightButtonPusher, ballBlockRight, ballBlockLeft;
     ColorSensor colorSensorLeftBottom, colorSensorRightBottom, colorSensorOnSide;
     ModernRoboticsI2cRangeSensor range;
     ModernRoboticsI2cGyro gyroSensor;
@@ -93,7 +95,8 @@ public class withPLoop extends LinearOpMode {
         infeed=hardwareMap.dcMotor.get(INFEEDNAME);
         infeed.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        ballBlock=hardwareMap.servo.get(BALLBLOCKNAME);
+        ballBlockRight = hardwareMap.servo.get(BALLBLOCKRIGHTNAME);
+        ballBlockLeft = hardwareMap.servo.get(BALLBLOCKLEFTNAME);
         leftButtonPusher = hardwareMap.servo.get(LEFTPUSHNAME);
         rightButtonPusher = hardwareMap.servo.get(RIGHTPUSHNAME);
 
@@ -117,7 +120,10 @@ public class withPLoop extends LinearOpMode {
 
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
-        ballBlock.setPosition(BALLBLOCKCLOSED);
+        leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
+        rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
+        ballBlockRight.setPosition(BALLBLOCKRIGHTCLOSED);
+        ballBlockLeft.setPosition(BALLBLOCKLEFTCLOSED);
 
         waitForStart();
 
@@ -128,7 +134,8 @@ public class withPLoop extends LinearOpMode {
         }
         stopMotors();
 
-        ballBlock.setPosition(BALLBLOCKOPEN);
+        ballBlockRight.setPosition(BALLBLOCKRIGHTOPEN);
+        ballBlockLeft.setPosition(BALLBLOCKLEFTOPEN);
         sleep(TIME_WAIT_SMALL);
         shoot1.setPower(1);
         shoot2.setPower(1);
@@ -138,7 +145,8 @@ public class withPLoop extends LinearOpMode {
         infeed.setPower(0);
         shoot1.setPower(0);
         shoot2.setPower(0);
-        ballBlock.setPosition(BALLBLOCKCLOSED);
+        ballBlockRight.setPosition(BALLBLOCKLEFTCLOSED);
+        ballBlockLeft.setPosition(BALLBLOCKLEFTCLOSED);
 
 /*
         resetEncoder(leftFrontWheel);

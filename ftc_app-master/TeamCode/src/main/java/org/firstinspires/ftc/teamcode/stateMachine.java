@@ -43,8 +43,8 @@ public class stateMachine extends OpMode {
 
     public static final double LEFT_SERVO_OFF_VALUE = 0;
     public static final double LEFT_SERVO_ON_VALUE = 1;
-    public static final double RIGHT_SERVO_ON_VALUE = 1;
     public static final double RIGHT_SERVO_OFF_VALUE = 0;
+    public static final double RIGHT_SERVO_ON_VALUE = 1;
 
 
     //TODO: make a pretty 'map'
@@ -174,7 +174,6 @@ public class stateMachine extends OpMode {
                 waitForMS(TIME_WAIT_SMALL);
                 while (Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE2) {
                     arcade(POWER2, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-
                 }
                 stopMotors();
                 CurrentState = state.Angling;
@@ -185,7 +184,6 @@ public class stateMachine extends OpMode {
                 //TURN
                 while (gyroSensor.getIntegratedZValue() < GYRO3) {
                     arcade(0, 0, POWER3, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-
                 }
                 stopMotors();
 
@@ -240,15 +238,15 @@ public class stateMachine extends OpMode {
 
                 }
                 stopMotors();
-
                 CurrentState = state.GoingToBeacon1;
                 break;
+
             case GoingToBeacon1:
                 RecentState = state.GoingToBeacon1;
                 //backwards to back color sensor
                 while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
-                    double lPower = POWER7 - (gyroSensor.getIntegratedZValue() / 100);
-                    double rPower = POWER7 + (gyroSensor.getIntegratedZValue() / 100);
+                    double lPower = POWER7 - (gyroSensor.getIntegratedZValue() / 50);
+                    double rPower = POWER7 + (gyroSensor.getIntegratedZValue() / 50);
                     leftBackWheel.setPower(lPower);
                     leftFrontWheel.setPower(lPower);
                     rightBackWheel.setPower(rPower);
@@ -284,15 +282,23 @@ public class stateMachine extends OpMode {
                 //Body
                 dim.setLED(0, true);
                 dim.setLED(1, true);
-                while (!((colorSensorRightBottom.alpha() > COLOR_READING_FOR_LINE) && (colorSensorLeftBottom.alpha() > COLOR_READING_FOR_LINE))) {
-                    if (colorSensorLeftBottom.alpha() > COLOR_READING_FOR_LINE) {
-                        rightFrontWheel.setPower(-POWER_HANDLE_COLOR);
-                        rightBackWheel.setPower(-POWER_HANDLE_COLOR);
-                    } else {
-                        leftFrontWheel.setPower(-POWER_HANDLE_COLOR);
-                        leftBackWheel.setPower(-POWER_HANDLE_COLOR);
-                    }
+                while (gyroSensor.getIntegratedZValue() > 5){
+                    double p = gyroSensor.getIntegratedZValue()/50;
+                    leftBackWheel.setPower(POWER_HANDLE_COLOR);
+                    leftFrontWheel.setPower(POWER_HANDLE_COLOR);
+                    rightBackWheel.setPower(-POWER_HANDLE_COLOR);
+                    rightFrontWheel.setPower(-POWER_HANDLE_COLOR);
                 }
+                waitForMS(TIME_WAIT_SMALL);
+                while (gyroSensor.getIntegratedZValue() < -5){
+                    double p = gyroSensor.getIntegratedZValue()/50;
+                    leftBackWheel.setPower(-POWER_HANDLE_COLOR);
+                    leftFrontWheel.setPower(-POWER_HANDLE_COLOR);
+                    rightBackWheel.setPower(POWER_HANDLE_COLOR);
+                    rightFrontWheel.setPower(POWER_HANDLE_COLOR);
+                }
+                waitForMS(TIME_WAIT_SMALL);
+
                 if (colorSensorOnSide.blue() > colorSensorOnSide.red()) {
                     rightButtonPusher.setPosition(RIGHT_SERVO_ON_VALUE);
                     leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
@@ -314,6 +320,18 @@ public class stateMachine extends OpMode {
                     CurrentState = state.CapBall;
                 }
                 RecentState = state.PressingBeacon;
+
+
+
+
+
+
+
+
+
+
+                CurrentState = state.Finished;
+
                 break;
             case CapBall:
                 RecentState = state.CapBall;
@@ -348,10 +366,6 @@ public class stateMachine extends OpMode {
         telemetry.addData("Side Color", colorSensorOnSide.red() > 2 || colorSensorOnSide.blue() > 2
                 ? colorSensorOnSide.red() > colorSensorOnSide.blue() ? "Blue" : "Red" : "Not Sure");
         telemetry.update();
-        while(!gamepad1.a){
-            //wait until gamepad1.a is pressed to go to the next step
-            waitForMS(TIME_WAIT_SMALL);
-        }
     }
 
     public static void resetEncoder(DcMotor m){
