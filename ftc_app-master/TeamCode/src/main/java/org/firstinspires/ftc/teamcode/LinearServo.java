@@ -9,20 +9,27 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Created by Ethan Schaffer on 11/5/2016.
  */
 @TeleOp(name="Linear Servo", group="TeleOp")
-@Disabled
+//@Disabled
 public class LinearServo extends OpMode {
-    Servo linear;
+    Servo linearL, linearR;
 
     @Override
     public void init() {
-        linear = hardwareMap.servo.get("l");
+
+        linearL = hardwareMap.servo.get("lp");
+        linearR = hardwareMap.servo.get("rp");
+
     }
 
     @Override
     public void loop() {
-        double value = gamepad1.left_stick_y/2+.5;
-        linear.setPosition(value);
-        telemetry.addData("Value", linear.getPosition());
+        double valueL = gamepad1.left_stick_y/2+.5;
+        linearL.setPosition(valueL);
+        telemetry.addData("L", linearL.getPosition());
 
+        double valueR = gamepad1.right_stick_y/2+.5;
+        linearR.setPosition(valueR);
+        telemetry.addData("R", linearR.getPosition());
+        telemetry.update();
     }
 }

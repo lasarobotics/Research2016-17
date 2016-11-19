@@ -41,10 +41,10 @@ public class stateMachine extends OpMode {
     public static final String COLORLEFTBOTTOMNAME = "cb";//Port 2
     public static final String COLORRIGHTBOTTOMNAME = "cb2"; //Port 4
 
-    public static final double LEFT_SERVO_OFF_VALUE = 0;
+    public static final double LEFT_SERVO_OFF_VALUE = .3;
     public static final double LEFT_SERVO_ON_VALUE = 1;
-    public static final double RIGHT_SERVO_OFF_VALUE = 0;
     public static final double RIGHT_SERVO_ON_VALUE = 1;
+    public static final double RIGHT_SERVO_OFF_VALUE = .3;
 
 
     //TODO: make a pretty 'map'
@@ -59,18 +59,18 @@ public class stateMachine extends OpMode {
 
     //Line up with wall
     public static final double POWER2 = .2,  DISTANCE2 = 500;             //Backup Distance
-    public static final double POWER3 = .2,  GYRO3 = 32; //Turn Reading
-    public static final double POWER4 = -.5, DISTANCE4 = 3200;            //Forwards Distance
-    public static final double POWER5 = -.2, GYRO5READINGTARGET = 5; //Turn Reading
+    public static final double POWER3 = .15,  GYRO3 = 40; //Turn Reading
+    public static final double POWER4 = -.5, DISTANCE4 = 4000;            //Forwards Distance
+    public static final double POWER5 = -.15, GYRO5 = 0; //Turn Reading
 
     //Allign with wall by running into it
-    public static final double POWER6 = .45, DISTANCE6 = 200;    //Strafe to between the white lines.
+    public static final double POWER6 = .45, DISTANCE6 = 250;    //Strafe to between the white lines.
     public static final double CM_FROM_WALL_VALUE = 4;
 
     //Getting Beacons
-    public static final double POWER7 = .25, COLOR_READING_FOR_LINE = 4; //Backwards to beacon #1
+    public static final double POWER7 = .1, COLOR_READING_FOR_LINE = 4; //Backwards to beacon #1
     public static final double POWER_HANDLE_COLOR = .15;
-    public static final double POWER8 = -.25, DISTANCE8 = 250; //Forwards to Beacon #2
+    public static final double POWER8 = -.2, DISTANCE8 = 250; //Forwards to Beacon #2
 
     //Cap Ball
     public static  final double POWER9 = .2, GYRO9 = 45; //ReOrient for Hitting Cap Ball
@@ -113,19 +113,21 @@ public class stateMachine extends OpMode {
         colorSensorRightBottom.setI2cAddress(I2cAddr.create8bit(0x2c));
         gyroSensor = hardwareMap.get(ModernRoboticsI2cGyro.class, GYRONAME);
         dim = hardwareMap.get(DeviceInterfaceModule.class, "Device Interface Module 1");
-        gyroSensor.calibrate();
-        while (gyroSensor.isCalibrating()) {
-            telemetry.addData("Gyro", "Calibrating...");
-            telemetry.update();
-        }
-        telemetry.addData("Gyro", "Calibrated");
-        telemetry.addData("raw ultrasonic", range.rawUltrasonic());
-        telemetry.update();
 
         leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
         rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
         ballBlockRight.setPosition(BALLBLOCKRIGHTCLOSED);
         ballBlockLeft.setPosition(BALLBLOCKLEFTCLOSED);
+        gyroSensor.calibrate();
+        while (gyroSensor.isCalibrating()) {
+            telemetry.addData("Gyro", "Calibrating...");
+            telemetry.update();
+        }
+        telemetry.addData("Gyro", "Calibrated!");
+
+        telemetry.addData("raw ultrasonic", range.rawUltrasonic());
+        telemetry.update();
+
 
         CurrentState = state.ForwardsToShoot;
     }
@@ -196,7 +198,6 @@ public class stateMachine extends OpMode {
                 waitForMS(TIME_WAIT_SMALL);
                 while (Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE4) {
                     arcade(POWER4, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-
                 }
                 stopMotors();
                 CurrentState = state.AlignAgainstWall;
@@ -205,9 +206,9 @@ public class stateMachine extends OpMode {
             case AlignAgainstWall:
                 RecentState = state.AlignAgainstWall;
                 //TURN BACK
-                while (gyroSensor.getIntegratedZValue() > GYRO5READINGTARGET) {
+                while (gyroSensor.getIntegratedZValue() > GYRO5) {
                     telemetry.addData("Gyro", gyroSensor.getIntegratedZValue());
-                    telemetry.addData("G Targ", GYRO5READINGTARGET);
+                    telemetry.addData("G Targ", GYRO5);
                     telemetry.update();
                     arcade(0, 0, POWER5, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
                 }
@@ -233,9 +234,8 @@ public class stateMachine extends OpMode {
                 stopMotors();
                 resetEncoder(leftFrontWheel);
                 waitForMS(TIME_WAIT_SMALL);
-                while (Math.abs(leftFrontWheel.getCurrentPosition()) < 2 * DISTANCE6) {
+                while (Math.abs(leftFrontWheel.getCurrentPosition()) < DISTANCE6*2) {
                     arcade(0, -POWER6, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
-
                 }
                 stopMotors();
                 CurrentState = state.GoingToBeacon1;
@@ -244,19 +244,29 @@ public class stateMachine extends OpMode {
             case GoingToBeacon1:
                 RecentState = state.GoingToBeacon1;
                 //backwards to back color sensor
-                while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
-                    double lPower = POWER7 - (gyroSensor.getIntegratedZValue() / 50);
-                    double rPower = POWER7 + (gyroSensor.getIntegratedZValue() / 50);
+                while ((colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE) && (colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE)) {
+                    telemetry.addData("Made it", "Hooray!");
+                    double lPower = POWER7 + (gyroSensor.getIntegratedZValue() / 50);
+                    double rPower = POWER7 - (gyroSensor.getIntegratedZValue() / 50);
+                    lPower = POWER7;
+                    rPower = POWER7;
                     leftBackWheel.setPower(lPower);
                     leftFrontWheel.setPower(lPower);
                     rightBackWheel.setPower(rPower);
                     rightFrontWheel.setPower(rPower);
                     telemetry.addData("Gyro", gyroSensor.getIntegratedZValue());
-
                 }
                 stopMotors();
 
-                CurrentState = state.PressingBeacon;
+                CurrentState = state.Finished;
+
+
+
+
+
+
+
+
                 break;
             case GoingToBeacon2:
                 RecentState = state.GoingToBeacon2;
@@ -282,23 +292,21 @@ public class stateMachine extends OpMode {
                 //Body
                 dim.setLED(0, true);
                 dim.setLED(1, true);
-                while (gyroSensor.getIntegratedZValue() > 5){
-                    double p = gyroSensor.getIntegratedZValue()/50;
-                    leftBackWheel.setPower(POWER_HANDLE_COLOR);
-                    leftFrontWheel.setPower(POWER_HANDLE_COLOR);
-                    rightBackWheel.setPower(-POWER_HANDLE_COLOR);
-                    rightFrontWheel.setPower(-POWER_HANDLE_COLOR);
+
+                while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE &&  colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
+                    arcade(-POWER_HANDLE_COLOR, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
                 }
-                waitForMS(TIME_WAIT_SMALL);
-                while (gyroSensor.getIntegratedZValue() < -5){
-                    double p = gyroSensor.getIntegratedZValue()/50;
-                    leftBackWheel.setPower(-POWER_HANDLE_COLOR);
-                    leftFrontWheel.setPower(-POWER_HANDLE_COLOR);
-                    rightBackWheel.setPower(POWER_HANDLE_COLOR);
-                    rightFrontWheel.setPower(POWER_HANDLE_COLOR);
-                }
+                stopMotors();
                 waitForMS(TIME_WAIT_SMALL);
 
+                while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE){
+                        leftFrontWheel.setPower(POWER_HANDLE_COLOR/1.5);
+                        leftBackWheel.setPower(POWER_HANDLE_COLOR/1.5);
+                        rightFrontWheel.setPower(POWER_HANDLE_COLOR/1.5);
+                        rightBackWheel.setPower(POWER_HANDLE_COLOR/1.5);
+                }
+                stopMotors();
+                waitForMS(TIME_WAIT_MEDIUM);
                 if (colorSensorOnSide.blue() > colorSensorOnSide.red()) {
                     rightButtonPusher.setPosition(RIGHT_SERVO_ON_VALUE);
                     leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
@@ -307,12 +315,14 @@ public class stateMachine extends OpMode {
                     leftButtonPusher.setPosition(LEFT_SERVO_ON_VALUE);
                 }
 
-                waitForMS(TIME_WAIT_LARGE);
+                dim.setLED(0, false);
+                dim.setLED(1, false);
+                waitForMS(TIME_WAIT_LARGE*3);
+                dim.setLED(0, true);
+                dim.setLED(1, true);
 
                 rightButtonPusher.setPosition(RIGHT_SERVO_OFF_VALUE);
                 leftButtonPusher.setPosition(LEFT_SERVO_OFF_VALUE);
-                dim.setLED(0, false);
-                dim.setLED(1, false);
 
                 if (RecentState == state.GoingToBeacon1) {
                     CurrentState = state.GoingToBeacon2;
@@ -320,18 +330,7 @@ public class stateMachine extends OpMode {
                     CurrentState = state.CapBall;
                 }
                 RecentState = state.PressingBeacon;
-
-
-
-
-
-
-
-
-
-
                 CurrentState = state.Finished;
-
                 break;
             case CapBall:
                 RecentState = state.CapBall;
@@ -352,12 +351,13 @@ public class stateMachine extends OpMode {
                 CurrentState = state.Finished;
                 break;
             case Finished:
-                stop();
+                super.stop();
                 break;
             default:
-                stop();
+                super.stop();
         } //Code Below this point will run on every cycle
-        waitForMS(TIME_WAIT_SMALL);
+        stopMotors();
+        waitForMS(TIME_WAIT_MEDIUM);
         telemetry.clear();
         telemetry.addData("State", CurrentState);
         telemetry.addData("Recent State", RecentState);

@@ -20,7 +20,7 @@ public class colorSensorData extends LinearOpMode{
         color_bottom.setI2cAddress(I2cAddr.create8bit(0x4c));
         color_side = hardwareMap.colorSensor.get("cs");
         color_side.setI2cAddress(I2cAddr.create8bit(0x3c));
-        color_bottom2 = hardwareMap.colorSensor.get("cs2");
+        color_bottom2 = hardwareMap.colorSensor.get("cb2");
         color_bottom2.setI2cAddress(I2cAddr.create8bit(0x2c));
         color_bottom.enableLed(true);
         color_bottom2.enableLed(true);
