@@ -277,7 +277,7 @@ public class stateMachine extends OpMode {
                 }
                 waitForMS(500);
                 ///forwards to front color sensor
-                while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
+                while ((colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE) && (colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE)) {
                     double lPower = POWER8 + (gyroSensor.getIntegratedZValue() / 100);
                     double rPower = POWER8 - (gyroSensor.getIntegratedZValue() / 100);
                     leftBackWheel.setPower(lPower);
@@ -293,13 +293,13 @@ public class stateMachine extends OpMode {
                 dim.setLED(0, true);
                 dim.setLED(1, true);
 
-                while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE &&  colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE) {
+                while ((colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE) &&  (colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE)){
                     arcade(-POWER_HANDLE_COLOR, 0, 0, leftFrontWheel, rightFrontWheel, leftBackWheel, rightBackWheel);
                 }
                 stopMotors();
                 waitForMS(TIME_WAIT_SMALL);
 
-                while (colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE && colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE){
+                while ((colorSensorLeftBottom.alpha() < COLOR_READING_FOR_LINE) && (colorSensorRightBottom.alpha() < COLOR_READING_FOR_LINE)){
                         leftFrontWheel.setPower(POWER_HANDLE_COLOR/1.5);
                         leftBackWheel.setPower(POWER_HANDLE_COLOR/1.5);
                         rightFrontWheel.setPower(POWER_HANDLE_COLOR/1.5);
